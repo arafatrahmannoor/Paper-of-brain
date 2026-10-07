@@ -51,7 +51,7 @@ A sibling is an offline-augmented copy of the same slice, for example `G_710.jpg
 ### High-confidence errors (likely label noise or source artefacts)
 23 of the 53 errors (43%) have confidence ≥ 0.95. Given label smoothing, the model's maximum output is about 0.98, so these are essentially maximum-confidence errors.
 - **10 `Tr-me_*` meningioma images predicted as pituitary at 0.95–0.98:** 0269, 0293, 0828, 0829, 0831, 0942, 1025, 1153, 1336. Three of these IDs are consecutive (0828, 0829, 0831), which suggests adjacent slices of one patient. Sellar/parasellar meningiomas can genuinely mimic pituitary adenomas, so this could be either a real diagnostic difficulty or label noise. Either way it makes a good clinical discussion point.
-- **7 `image(n)` gliomas predicted as meningioma or no tumour at 0.97–0.98:** image(2), (16), (18), (19), (54), (56), (82). This SARTAJ testing-folder family has a 9.6% error rate (152 images so far), against about 0.7% overall. That is consistent with known label problems in that source.
+- **7 `image(n)` gliomas predicted as meningioma or no tumour at 0.97–0.98:** image(2), (16), (18), (19), (54), (56), (82). This SARTAJ testing-folder family has a 6.3% error rate (10 errors in 158 images so far), against 0.73% overall (53/7239). That is consistent with known label problems in that source.
 - The rest: Tr-pi_1115, Tr-no_0093, P_834, P_844_VF_, m3 (134), G_709_RO_ and G_710_SP_.
 - **Sibling errors:** copies of the same slice fail together. G_712_SP_ and G_712_VF_ fail in Fold 1; P_834 and P_834_HF_ fail in Fold 3. Errors are therefore not independent across images, which is one more reason the per-image confidence interval is optimistic.
 
