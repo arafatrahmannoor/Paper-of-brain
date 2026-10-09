@@ -27,7 +27,7 @@ Red text in the PDF marks an item still to be filled in:
 |---|---|---|
 | 1 | Class samples | ✅ `fig1_classes.png`, re-composed from the first-submission panels; order matches the paper, internal title removed, (a)–(d) labels |
 | 2 | Architecture | ✅ `fig2_architecture.png` (layer sizes from the code) |
-| 3 | Graph pyramid on one slice | ⏳ generate (below) |
+| 3 | Graph pyramid on one slice | ✅ `fig3_graph_pyramid.png`, drawn on the glioma slice of Fig. 1(a) |
 | 4 | Pooled out-of-fold confusion matrix | ✅ `fig_confusion.pdf`, from the audited pooled counts of all 5 folds |
 | 5 | Reliability diagram | ✅ `fig4_reliability.pdf` |
 | 6 | Most confident errors | ⏳ generate (below) |
@@ -37,7 +37,7 @@ Red text in the PDF marks an item still to be filled in:
 - **Fold-1 confusion matrix "Acc 0.9950":** it has 12 errors, while the audited final fold 1 has 17 (99.30%). It comes from an earlier configuration, not the reported model. It is replaced by Fig. 4.
 - **Workflow figure:** usable only after editing. Remove the "Ablation Study" box (no ablations have been run yet), change "Multi-center" to "Public compiled", and move TTA from "Performance Evaluation" to inference. Then export it at 300 dpi or as PDF.
 
-### Generating Figs. 3 and 6
+### Generating Fig. 6
 These are generated from the dataset on Kaggle (CPU is enough):
 ```bash
 python tools/make_paper_figures.py \
@@ -45,4 +45,17 @@ python tools/make_paper_figures.py \
   --pred fold_1_predictions.csv fold_2_predictions.csv fold_3_predictions.csv fold_4_predictions.csv fold_5_predictions.csv \
   --out figures
 ```
-Copy `fig3_graph_pyramid.png` and `fig5_confident_errors.png` into `paper/figures/` and recompile. The red placeholder boxes are then replaced automatically. Do not copy `fig1_classes.png`, because Fig. 1 is already in place.
+Copy only `fig5_confident_errors.png` into `paper/figures/` and recompile. The red placeholder box is then replaced automatically. Do not copy the script's `fig1_classes.png` or `fig3_graph_pyramid.png`, because Figs. 1 and 3 are already in place.
+
+The eight images the figure will show (from the uploaded prediction CSVs), all under `Train/`:
+
+| Fold | File | True → predicted | Confidence |
+|---|---|---|---|
+| 1 | `pituitary/Tr-pi_1115.jpg` | pituitary → glioma | 0.982 |
+| 3 | `glioma/image(56).jpg` | glioma → no tumour | 0.981 |
+| 3 | `glioma/image(18).jpg` | glioma → no tumour | 0.980 |
+| 2 | `meningioma/Tr-me_1025.jpg` | meningioma → pituitary | 0.980 |
+| 1 | `glioma/image(2).jpg` | glioma → meningioma | 0.978 |
+| 2 | `glioma/image(54).jpg` | glioma → meningioma | 0.978 |
+| 2 | `notumor/Tr-no_0093.jpg` | no tumour → pituitary | 0.977 |
+| 4 | `meningioma/Tr-me_1263.jpg` | meningioma → glioma | 0.977 |
