@@ -16,8 +16,6 @@ Red text in the PDF marks an item still to be filled in:
 - author names, affiliations and corresponding author;
 - journal name;
 - GPU model and PyTorch / PyTorch Geometric versions;
-- repository URL;
-- funding and competing-interests statement;
 - acknowledgment / author contributions / AI-tool disclosure;
 - contributor names for the Version 7 Mendeley record (`bdneuro2025v7` in `references.bib`).
 
