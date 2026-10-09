@@ -31,10 +31,10 @@ Red text in the PDF marks an item still to be filled in:
 | W | Study workflow (supervisor's request) | ✅ `fig_workflow.png`: the authors' diagram with two text fixes ("Public Brain MRI Dataset (Mendeley, v1)", "12,064 Images"). Replace it with a 300-dpi PowerPoint export that has the same two fixes |
 | 6 | Most confident errors | ✅ `fig5_confident_errors.png`, generated on Kaggle from the dataset |
 
-### Figures from the first submission that must NOT be reused
+### Figures from the first submission
 - **CLAHE before/after figure:** the training code applies no CLAHE, so the figure and the CLAHE paragraph describe a step the model never saw.
 - **Fold-1 confusion matrix "Acc 0.9950":** it has 12 errors, while the audited final fold 1 has 17 (99.30%). It comes from an earlier configuration, not the reported model. It is replaced by Fig. 4.
-- **Workflow figure:** usable only after editing. Save it as `figures/fig_workflow.png` and recompile. It then appears automatically at the start of Section IV as a full-width figure, with a sentence that refers to it. Without the file, neither the figure nor the sentence appears. Remove the "Ablation Study" box (no ablations have been run yet), change "Multi-center" to "Public compiled", and move TTA from "Performance Evaluation" to inference. Export it at 300 dpi.
+- **Workflow figure:** now included (see table above) with two text fixes. The ablation box stays, because the planned ablations match its four variants; delete the red caption note once their results are in the paper.
 
 ### Generating Fig. 6
 These are generated from the dataset on Kaggle (CPU is enough):
