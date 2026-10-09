@@ -17,18 +17,19 @@ A **realistic target is 8–8.5/10 at a good journal**, for example Computers in
 
 ## A. What I need from you (no new training)
 
-| # | Item | Why |
+| # | Item | Status |
 |---|---|---|
-| A1 | **Final training notebook/code** (`.ipynb`) | To verify `forward()`: exp vs softplus for τ, α order, whether u is detached, the early-stopping rule. Also to run the saturation/TTA no-op check and to write the inference script |
-| A2 | Output of `tools/inspect_checkpoints.py` on the 5 `.pth` files | Gives each fold's best epoch and diagnoses Fold 5 |
-| A3 | **The full current manuscript** (all sections, `.docx` or PDF) | So far I have only reviewed §3–4. `new paper.docx` in the repo is 0 bytes |
-| A4 | Fold 5 training log (if saved) | Confirms the A2 diagnosis |
+| A1 | Final training code | ✅ Received and audited (`reviews/code-audit.md`). It matches the checkpoints exactly. Saved as `code/brain_tumor_cv.py` |
+| A2 | The 5 `Best epoch: N` lines from the Kaggle logs, or the output of `tools/inspect_checkpoints.py` | ⏳ Diagnoses Fold 5 |
+| A3 | Full current manuscript (`.docx` or PDF) | ⏳ `new paper.docx` in the repo is 0 bytes |
+| A4 | Greyscale check and `tools/provenance_check.py` table (`reviews/code-audit.md` §4) | ⏳ Settles the TTA no-op question and the dataset provenance |
+| A5 | URL and citation of the website where the dataset was published | ⏳ Needed for the Dataset section and reference [19] |
 
 ## B. Experiments, in priority order
 
 ### Critical (reject risk without them)
-1. **Leak-free evaluation.** Rerun the same 5-fold protocol with `StratifiedGroupKFold`. Group by filename base (`G_710*` and so on) and merge pHash near-duplicates into the same group. Alternatively, rerun on the de-duplicated Version 7 (5,941 images). Report this as the **main result**, with the image-level CV (99.15%) alongside to show the leakage effect.
-2. **Ablations**, using the same grouped folds and settings:
+1. **Leak-free evaluation.** Ready to run: `code/brain_tumor_cv_v2.py` (`CV_MODE="grouped"`; see `code/README.md`). Rerun the same 5-fold protocol with `StratifiedGroupKFold`. Group by filename base (`G_710*` and so on) and merge pHash near-duplicates into the same group. Alternatively, rerun on the de-duplicated Version 7 (5,941 images). Report this as the **main result**, with the image-level CV (99.15%) alongside to show the leakage effect.
+2. **Ablations** (`ABLATION=` switch in v2), using the same grouped folds and settings:
    - image-only (EfficientNet-B3);
    - graph-only;
    - concatenation fusion;
