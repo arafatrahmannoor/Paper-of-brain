@@ -1,0 +1,48 @@
+% Fig. (architecture): vector diagram, editable in Overleaf. Layer sizes follow code/brain_tumor_cv.py.
+% Requires \usetikzlibrary{positioning,arrows.meta} in the preamble.
+\begin{tikzpicture}[
+  font=\scriptsize,
+  box/.style={draw=black!55, rounded corners=2pt, align=flush center, inner sep=3pt, fill=white},
+  wide/.style={box, text width=7.6cm},
+  half/.style={box, text width=3.5cm, minimum height=1.62cm},
+  arr/.style={-{Stealth[length=1.5mm]}, draw=black!60, line width=0.5pt},
+  node distance=4.2mm]
+
+\node[wide] (in) {\textbf{MRI slice, $224 \times 224$}\\the same augmented image feeds both streams};
+
+\node[half, fill=black!4, below=6mm of in.south west, anchor=north west] (pyr)
+  {\textbf{Multi-scale graph pyramid}\\$4{\times}4$, $8{\times}8$, $16{\times}16$ grids\\336 nodes, 24-d descriptors\\8-neighbour and parent--child\\edges (3,004 per graph)};
+\node[half, fill=black!4, below=6mm of in.south east, anchor=north east] (eff)
+  {\textbf{EfficientNet-B3}\\ImageNet-pretrained\\fine-tuned end to end\\1,536-d pooled feature\\10.7\,M parameters};
+
+\node[half, fill=black!4, below=of pyr] (gnn)
+  {\textbf{Multi-path GNN}\\GCN, GAT, TransformerConv\\2 stages, softmax-weighted\\paths, residual link\\mean/max/sum pool $\rightarrow g$};
+\node[half, fill=black!4, below=of eff] (proj)
+  {\textbf{Projection head}\\$1536 \rightarrow 768 \rightarrow 384$\\BN, GELU, dropout 0.3\\[2pt]$\rightarrow i$};
+
+\node[wide, below=6mm of gnn.south west, anchor=north west, xshift=-0.0cm] (rec)
+  {\textbf{Dynamic feature recalibration}\\modality gates $384{\rightarrow}24{\rightarrow}384$; shared gate $384{\rightarrow}96{\rightarrow}384$\\cross-modal gate on $[g \,\|\, i]$; residual and LayerNorm $\rightarrow g_r,\ i_r$};
+
+\node[wide, below=of rec] (trf)
+  {\textbf{Two-token cross-modal transformer}\\tokens $[g_r, i_r]$ plus learnable modality embeddings\\3 post-norm layers, 8 heads, FFN $384{\rightarrow}1536{\rightarrow}384$ $\rightarrow z_g,\ z_i$};
+
+\node[wide, below=of trf, draw=blue!60!black, fill=blue!7, line width=0.7pt] (gate)
+  {\textbf{MC-dropout uncertainty gate}\\auxiliary heads $384{\rightarrow}192{\rightarrow}4$; $T = 20$ dropout samples ($p = 0.2$)\\$u_m$ = mean class variance; $[w_g, w_i] = \mathrm{softmax}(-[\tilde{u}_g, \tilde{u}_i]/\tau)$};
+
+\node[wide, below=of gate] (cls)
+  {\textbf{Classifier}\\$[w_g z_g \,\|\, w_i z_i]$: $768 \rightarrow 512 \rightarrow 256 \rightarrow 4$};
+
+\node[wide, below=of cls] (out)
+  {\textbf{Class probabilities}\\glioma, meningioma, no tumour, pituitary; mean over 10 TTA views};
+
+\draw[arr] (in.south) -- ++(0,-3mm) -| (pyr.north);
+\draw[arr] (in.south) -- ++(0,-3mm) -| (eff.north);
+\draw[arr] (pyr) -- (gnn);
+\draw[arr] (eff) -- (proj);
+\draw[arr] (gnn.south) -- (gnn.south |- rec.north);
+\draw[arr] (proj.south) -- (proj.south |- rec.north);
+\draw[arr] (rec) -- (trf);
+\draw[arr] (trf) -- (gate);
+\draw[arr] (gate) -- (cls);
+\draw[arr] (cls) -- (out);
+\end{tikzpicture}

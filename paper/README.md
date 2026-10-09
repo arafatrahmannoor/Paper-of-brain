@@ -24,7 +24,7 @@ Red text in the PDF marks an item still to be filled in:
 | Fig. | Content | Status |
 |---|---|---|
 | 1 | Class samples | ✅ `fig1_classes.png`, re-composed from the first-submission panels; order matches the paper, internal title removed, (a)–(d) labels |
-| 2 | Architecture | ✅ `fig2_architecture.png` (layer sizes from the code) |
+| 2 | Architecture | ✅ `fig_architecture.tex`: vector TikZ diagram, edit its text directly in Overleaf. The model is identical in `brain_tumor_cv_v2.py`, so the planned experiments do not change it |
 | 3 | Graph pyramid on one slice | ✅ `fig3_graph_pyramid.png`, drawn on the glioma slice of Fig. 1(a) |
 | 4 | Pooled out-of-fold confusion matrix | ✅ `fig_confusion.pdf`, from the audited pooled counts of all 5 folds |
 | 5 | Reliability diagram | ✅ `fig4_reliability.pdf` |
@@ -33,7 +33,7 @@ Red text in the PDF marks an item still to be filled in:
 ### Figures from the first submission that must NOT be reused
 - **CLAHE before/after figure:** the training code applies no CLAHE, so the figure and the CLAHE paragraph describe a step the model never saw.
 - **Fold-1 confusion matrix "Acc 0.9950":** it has 12 errors, while the audited final fold 1 has 17 (99.30%). It comes from an earlier configuration, not the reported model. It is replaced by Fig. 4.
-- **Workflow figure:** usable only after editing. Remove the "Ablation Study" box (no ablations have been run yet), change "Multi-center" to "Public compiled", and move TTA from "Performance Evaluation" to inference. Then export it at 300 dpi or as PDF.
+- **Workflow figure:** usable only after editing. Save it as `figures/fig_workflow.png` and recompile. It then appears automatically at the start of Section IV as a full-width figure, with a sentence that refers to it. Without the file, neither the figure nor the sentence appears. Remove the "Ablation Study" box (no ablations have been run yet), change "Multi-center" to "Public compiled", and move TTA from "Performance Evaluation" to inference. Export it at 300 dpi.
 
 ### Generating Fig. 6
 These are generated from the dataset on Kaggle (CPU is enough):

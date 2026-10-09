@@ -13,6 +13,8 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
 \usepackage[hidelinks]{hyperref}
 
 \graphicspath{{figures/}}
@@ -147,12 +149,20 @@ A later release of the same Mendeley record (Version~7) states that exact and ne
 
 % =====================================================================
 \section{Proposed Method}\label{sec:method}
-The classifier learns two complementary views of the same slice: dense appearance features from a CNN, and regional relations from a graph built over a multi-scale grid. Both streams map to 384-dimensional vectors, which are refined jointly, weighted by their estimated reliability and classified (Fig.~\ref{fig:arch}). Exact layer settings follow the released code.
+The classifier learns two complementary views of the same slice: dense appearance features from a CNN, and regional relations from a graph built over a multi-scale grid. Both streams map to 384-dimensional vectors, which are refined jointly, weighted by their estimated reliability and classified (Fig.~\ref{fig:arch}). Exact layer settings follow the released code.\IfFileExists{figures/fig_workflow.png}{ The overall study workflow, from dataset preparation to evaluation, is summarised in Fig.~\ref{fig:workflow}.}{}
+
+\IfFileExists{figures/fig_workflow.png}{%
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_workflow.png}
+\caption{Overview of the study workflow: dataset preparation, pre-processing and graph construction, five-fold cross-validation, the dual-stream model and its evaluation.}
+\label{fig:workflow}
+\end{figure*}}{}
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig2_architecture.png}
-\caption{Architecture of the dual-stream classifier. Layer sizes are taken from the released code; $g$ and $i$ denote the graph and image embeddings at each stage.}
+\input{figures/fig_architecture.tex}
+\caption{Architecture of the dual-stream classifier, with layer sizes from the released code. $g$ and $i$ are the graph and image embeddings, $g_r$ and $i_r$ their recalibrated versions, $z_g$ and $z_i$ the transformer outputs and $w_g$, $w_i$ the uncertainty-based fusion weights.}
 \label{fig:arch}
 \end{figure}
 
