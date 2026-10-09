@@ -116,7 +116,7 @@ Table~\ref{tab:classes} reports the counts in the distributed files. The record'
 \begin{figure*}[!t]
 \centering
 \figorplaceholder{fig1_classes.png}{1.6in}{\textwidth}
-\caption{Representative slices of the four classes (glioma, meningioma, no tumour, pituitary tumour) from the dataset~\cite{hira2025mendeley}.}
+\caption{Representative contrast-enhanced T1-weighted slices of the four classes from the dataset~\cite{hira2025mendeley} (CC~BY~4.0): (a)~glioma, (b)~meningioma, (c)~no tumour and (d)~pituitary tumour. The slices differ in imaging plane, as does the dataset.}
 \label{fig:classes}
 \end{figure*}
 
@@ -337,25 +337,14 @@ Pituitary & 3,130 & 99.08 & 99.58 & 99.68 & 99.33 \\
 \end{tabular}
 \end{table}
 
-The 103 errors concentrate between tumour types (Table~\ref{tab:confusion}). Glioma--meningioma confusions account for 43 (42\%), meningioma--pituitary for 22 and glioma--pituitary for 8. Nineteen of 9,632 tumour images (0.20\%) were called tumour-free, and 11 of 2,432 tumour-free images (0.45\%) were called tumour.
+The 103 errors concentrate between tumour types (Fig.~\ref{fig:confusion}). Glioma--meningioma confusions account for 43 (42\%), meningioma--pituitary for 22 and glioma--pituitary for 8. Nineteen of 9,632 tumour images (0.20\%) were called tumour-free, and 11 of 2,432 tumour-free images (0.45\%) were called tumour.
 
-\begin{table}[!t]
-\caption{Pooled Out-of-Fold Confusion Matrix (Rows: True Class; Columns: Predicted Class)}
-\label{tab:confusion}
+\begin{figure}[!t]
 \centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lrrrr@{}}
-\toprule
-True $\backslash$ Predicted & Glioma & Meningioma & No tumour & Pituitary \\
-\midrule
-Glioma & \textbf{3,734} & 23 & 10 & 6 \\
-Meningioma & 20 & \textbf{2,689} & 5 & 15 \\
-No tumour & 3 & 0 & \textbf{2,421} & 8 \\
-Pituitary & 2 & 7 & 4 & \textbf{3,117} \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\columnwidth]{fig_confusion.pdf}
+\caption{Pooled out-of-fold confusion matrix of folds 1--5 ($n = 12{,}064$). Each cell gives the image count and the row percentage; shading follows the row percentage on a logarithmic scale so that small error counts remain visible.}
+\label{fig:confusion}
+\end{figure}
 
 \subsection{Calibration}
 The model is well calibrated below 0.9 confidence and slightly under-confident above it (Fig.~\ref{fig:reliability}). In the top bin, which holds 11,803 images (97.8\%), accuracy was 99.64\% while mean confidence was 97.66\%; this gap accounts for almost all of the ECE. The highest probability assigned to any image was 0.988.

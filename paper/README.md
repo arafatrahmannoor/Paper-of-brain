@@ -21,7 +21,23 @@ Red text in the PDF marks an item still to be filled in:
 - acknowledgment / author contributions / AI-tool disclosure;
 - contributor names for the Version 7 Mendeley record (`bdneuro2025v7` in `references.bib`).
 
-## Figures 1, 3 and 5
+## Figures
+
+| Fig. | Content | Status |
+|---|---|---|
+| 1 | Class samples | ✅ `fig1_classes.png`, re-composed from the first-submission panels; order matches the paper, internal title removed, (a)–(d) labels |
+| 2 | Architecture | ✅ `fig2_architecture.png` (layer sizes from the code) |
+| 3 | Graph pyramid on one slice | ⏳ generate (below) |
+| 4 | Pooled out-of-fold confusion matrix | ✅ `fig_confusion.pdf`, from the audited pooled counts of all 5 folds |
+| 5 | Reliability diagram | ✅ `fig4_reliability.pdf` |
+| 6 | Most confident errors | ⏳ generate (below) |
+
+### Figures from the first submission that must NOT be reused
+- **CLAHE before/after figure:** the training code applies no CLAHE, so the figure and the CLAHE paragraph describe a step the model never saw.
+- **Fold-1 confusion matrix "Acc 0.9950":** it has 12 errors, while the audited final fold 1 has 17 (99.30%). It comes from an earlier configuration, not the reported model. It is replaced by Fig. 4.
+- **Workflow figure:** usable only after editing. Remove the "Ablation Study" box (no ablations have been run yet), change "Multi-center" to "Public compiled", and move TTA from "Performance Evaluation" to inference. Then export it at 300 dpi or as PDF.
+
+### Generating Figs. 3 and 6
 These are generated from the dataset on Kaggle (CPU is enough):
 ```bash
 python tools/make_paper_figures.py \
@@ -29,4 +45,4 @@ python tools/make_paper_figures.py \
   --pred fold_1_predictions.csv fold_2_predictions.csv fold_3_predictions.csv fold_4_predictions.csv fold_5_predictions.csv \
   --out figures
 ```
-Copy the three PNGs (`fig1_classes.png`, `fig3_graph_pyramid.png`, `fig5_confident_errors.png`) into `paper/figures/` and recompile. The red placeholder boxes are then replaced automatically; no edit to `main.tex` is needed.
+Copy `fig3_graph_pyramid.png` and `fig5_confident_errors.png` into `paper/figures/` and recompile. The red placeholder boxes are then replaced automatically. Do not copy `fig1_classes.png`, because Fig. 1 is already in place.
