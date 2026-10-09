@@ -28,6 +28,7 @@ Red text in the PDF marks an item still to be filled in:
 | 3 | Graph pyramid on one slice | ✅ `fig3_graph_pyramid.png`, drawn on the glioma slice of Fig. 1(a) |
 | 4 | Pooled out-of-fold confusion matrix | ✅ `fig_confusion.pdf`, from the audited pooled counts of all 5 folds |
 | 5 | Reliability diagram | ✅ `fig4_reliability.pdf` |
+| W | Study workflow (supervisor's request) | ✅ `fig_workflow.png`: the authors' diagram with two text fixes ("Public Brain MRI Dataset (Mendeley, v1)", "12,064 Images"). Replace it with a 300-dpi PowerPoint export that has the same two fixes |
 | 6 | Most confident errors | ✅ `fig5_confident_errors.png`, generated on Kaggle from the dataset |
 
 ### Figures from the first submission that must NOT be reused
