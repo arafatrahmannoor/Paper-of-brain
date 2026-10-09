@@ -13,6 +13,8 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
 \usepackage[hidelinks]{hyperref}
 
 \graphicspath{{figures/}}
@@ -34,14 +36,14 @@
 
 \author{\todo{First Author},~\todo{Second Author},~and~\todo{Supervisor Name}%
 \thanks{\todo{Authors} are with the \todo{Department}, \todo{Institution}, \todo{City}, \todo{Country} (e-mail: \todo{corresponding author e-mail}).}%
-\thanks{Funding: \todo{to be completed}. The authors declare no competing interests \todo{confirm}.}}
+\thanks{This research received no external funding. The authors declare no competing interests.}}
 
 \markboth{\todo{Journal name}}{\todo{Author} \MakeLowercase{\textit{et al.}}: Uncertainty-Gated EfficientNet--Graph Fusion for Brain Tumour MRI}
 
 \maketitle
 
 \begin{abstract}
-Deep networks often report near-perfect accuracy on public brain tumour MRI collections, yet calibration and the effect of duplicated images are rarely examined. We propose a dual-stream classifier that pairs an ImageNet-pretrained EfficientNet-B3 with a three-level graph pyramid of 336 regional nodes processed by parallel GCN, GAT and TransformerConv paths. The two 384-dimensional embeddings are refined by dynamic recalibration and a two-token cross-modal transformer, and fused by a gate driven by Monte Carlo (MC) dropout uncertainty. The model (19.35\,M parameters) was evaluated on a public four-class dataset of 12,064 contrast-enhanced T1-weighted images with image-level stratified five-fold cross-validation and ten-view test-time augmentation, and every metric was recomputed from the saved per-image out-of-fold predictions. Accuracy was $99.15 \pm 0.39\%$ (range 98.47--99.46\%) and macro-F1 $99.15 \pm 0.40\%$; pooled accuracy was 99.15\% (95\% bootstrap CI 98.99--99.31\%). Class-wise sensitivity ranged from 98.53\% to 99.58\% and specificity was at least 99.68\%; only 0.20\% of tumour images were classified as tumour-free. The expected calibration error was $0.021 \pm 0.003$, reflecting mild under-confidence attributable to label smoothing. A file-level audit showed that 35.2\% of the images are offline-augmented copies of 620 source slices, almost all with a sibling in the training partition, yet their accuracy (99.15\%) matched that of the remaining images (99.14\%). Because patient identifiers are unavailable and cross-source near-duplicates cannot be excluded, these are image-level estimates; duplicate-aware validation, component ablations and external testing are required before claims of generalisation.
+Deep networks often report near-perfect accuracy on public brain tumour MRI collections, yet calibration and the effect of duplicated images are rarely examined. We propose a dual-stream classifier that pairs an ImageNet-pretrained EfficientNet-B3 with a three-level graph pyramid of 336 regional nodes processed by parallel GCN, GAT and TransformerConv paths. The two 384-dimensional embeddings are refined by dynamic recalibration and a two-token cross-modal transformer, and fused by a gate driven by Monte Carlo (MC) dropout uncertainty. The model (19.35\,M parameters) was evaluated on a public four-class dataset of 12,064 images, described by its publishers as contrast-enhanced T1-weighted MRI, with image-level stratified five-fold cross-validation and ten-view test-time augmentation, and every metric was recomputed from the saved per-image out-of-fold predictions. Accuracy was $99.15 \pm 0.39\%$ (range 98.47--99.46\%) and macro-F1 $99.15 \pm 0.40\%$; pooled accuracy was 99.15\% (95\% bootstrap CI 98.99--99.31\%). Class-wise sensitivity ranged from 98.53\% to 99.58\% and specificity was at least 99.68\%; only 0.20\% of tumour images were classified as tumour-free. The expected calibration error was $0.021 \pm 0.003$, reflecting mild under-confidence attributable to label smoothing. A file-level audit showed that 35.2\% of the images are offline-augmented copies of 620 source slices, almost all with a sibling in the training partition, yet their accuracy (99.15\%) matched that of the remaining images (99.14\%). Because patient identifiers are unavailable and cross-source near-duplicates cannot be excluded, these are image-level estimates; duplicate-aware validation, component ablations and external testing are required before claims of generalisation.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -91,7 +93,7 @@ Data leakage is a pervasive source of irreproducible results in machine-learning
 
 % =====================================================================
 \section{Dataset}\label{sec:data}
-We used Version~1 of the publicly available \textit{Brain Tumor MRI Dataset (Glioma, Meningioma, Pituitary, No Tumor)} on Mendeley Data~\cite{hira2025mendeley}. Its publishers describe it as 12,064 pre-processed T1-weighted contrast-enhanced slices in four classes, distributed in predefined Train and Test folders. The record describes the images as greyscale or RGB depending on the scan, distributes them as JPEG or PNG under a CC~BY~4.0 licence, and does not document acquisition parameters. Visual inspection shows axial, coronal and sagittal slices; the plane is not recorded per image. The distributed archive is named ``Epic and CSCR hospital Dataset'', and a later version of the record states that the images were sourced from Epic \& CSCR Hospital, Bangladesh~\cite{bdneuro2025v7}. We merged both folders before cross-validation, so that every image is tested exactly once (Section~\ref{sec:cv}). No new images were acquired, and the data contain no patient identifiers.
+We used Version~1 of the publicly available \textit{Brain Tumor MRI Dataset (Glioma, Meningioma, Pituitary, No Tumor)} on Mendeley Data~\cite{hira2025mendeley}. Its publishers describe it as 12,064 pre-processed T1-weighted contrast-enhanced slices in four classes, distributed in predefined Train and Test folders. The record describes the images as greyscale or RGB depending on the scan, distributes them as JPEG or PNG under a CC~BY~4.0 licence, and does not document acquisition parameters. Visual inspection shows axial, coronal and sagittal slices; the plane is not recorded per image. Inspection of the misclassified images further showed that the collection is not uniformly T1-weighted: it includes T2-weighted slices and at least one slice that appears to be a computed tomography (CT) image (Fig.~\ref{fig:errors}). The distributed archive is named ``Epic and CSCR hospital Dataset'', and a later version of the record states that the images were sourced from Epic \& CSCR Hospital, Bangladesh~\cite{bdneuro2025v7}. We merged both folders before cross-validation, so that every image is tested exactly once (Section~\ref{sec:cv}). No new images were acquired, and the data contain no patient identifiers.
 
 \begin{table}[!t]
 \caption{Class Distribution of the 12,064 Images Used}
@@ -116,7 +118,7 @@ Table~\ref{tab:classes} reports the counts in the distributed files. The record'
 \begin{figure*}[!t]
 \centering
 \figorplaceholder{fig1_classes.png}{1.6in}{\textwidth}
-\caption{Representative slices of the four classes (glioma, meningioma, no tumour, pituitary tumour) from the dataset~\cite{hira2025mendeley}.}
+\caption{Representative slices of the four classes from the dataset~\cite{hira2025mendeley} (CC~BY~4.0): (a)~glioma, (b)~meningioma, (c)~no tumour and (d)~pituitary tumour. The slices differ in imaging plane, as does the dataset.}
 \label{fig:classes}
 \end{figure*}
 
@@ -147,12 +149,20 @@ A later release of the same Mendeley record (Version~7) states that exact and ne
 
 % =====================================================================
 \section{Proposed Method}\label{sec:method}
-The classifier learns two complementary views of the same slice: dense appearance features from a CNN, and regional relations from a graph built over a multi-scale grid. Both streams map to 384-dimensional vectors, which are refined jointly, weighted by their estimated reliability and classified (Fig.~\ref{fig:arch}). Exact layer settings follow the released code.
+The classifier learns two complementary views of the same slice: dense appearance features from a CNN, and regional relations from a graph built over a multi-scale grid. Both streams map to 384-dimensional vectors, which are refined jointly, weighted by their estimated reliability and classified (Fig.~\ref{fig:arch}). Exact layer settings follow the released code.\IfFileExists{figures/fig_workflow.png}{ The overall study workflow, from dataset preparation to evaluation, is summarised in Fig.~\ref{fig:workflow}.}{}
+
+\IfFileExists{figures/fig_workflow.png}{%
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{fig_workflow.png}
+\caption{Overview of the study workflow: (A)~dataset preparation, (B)~image and graph pre-processing, (C)~extraction of the visual and topological modalities, (D)~the proposed architecture (detailed in Fig.~\ref{fig:arch}), (E)~ablation study, (F)~result analysis and (G)~performance evaluation with ten-view test-time augmentation. \todo{The ablation study (E) is planned and its results are not yet reported; see Section~\ref{sec:params}.}}
+\label{fig:workflow}
+\end{figure*}}{}
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=\columnwidth]{fig2_architecture.png}
-\caption{Architecture of the dual-stream classifier. Layer sizes are taken from the released code; $g$ and $i$ denote the graph and image embeddings at each stage.}
+\input{figures/fig_architecture.tex}
+\caption{Architecture of the dual-stream classifier, with layer sizes from the released code. $g$ and $i$ are the graph and image embeddings, $g_r$ and $i_r$ their recalibrated versions, $z_g$ and $z_i$ the transformer outputs and $w_g$, $w_i$ the uncertainty-based fusion weights.}
 \label{fig:arch}
 \end{figure}
 
@@ -176,7 +186,7 @@ Within each level, a node is linked to its eight spatial neighbours. Between con
 \begin{figure*}[!t]
 \centering
 \figorplaceholder{fig3_graph_pyramid.png}{1.9in}{\textwidth}
-\caption{Graph pyramid on one slice: the $4 \times 4$, $8 \times 8$ and $16 \times 16$ grids whose patches form the 16, 64 and 256 nodes.}
+\caption{Graph pyramid on the glioma slice of Fig.~\ref{fig:classes}(a), resized to $224 \times 224$: (a)~$4 \times 4$, (b)~$8 \times 8$ and (c)~$16 \times 16$ grids, whose patches form the 16, 64 and 256 graph nodes.}
 \label{fig:pyramid}
 \end{figure*}
 
@@ -337,25 +347,14 @@ Pituitary & 3,130 & 99.08 & 99.58 & 99.68 & 99.33 \\
 \end{tabular}
 \end{table}
 
-The 103 errors concentrate between tumour types (Table~\ref{tab:confusion}). Glioma--meningioma confusions account for 43 (42\%), meningioma--pituitary for 22 and glioma--pituitary for 8. Nineteen of 9,632 tumour images (0.20\%) were called tumour-free, and 11 of 2,432 tumour-free images (0.45\%) were called tumour.
+The 103 errors concentrate between tumour types (Fig.~\ref{fig:confusion}). Glioma--meningioma confusions account for 43 (42\%), meningioma--pituitary for 22 and glioma--pituitary for 8. Nineteen of 9,632 tumour images (0.20\%) were called tumour-free, and 11 of 2,432 tumour-free images (0.45\%) were called tumour.
 
-\begin{table}[!t]
-\caption{Pooled Out-of-Fold Confusion Matrix (Rows: True Class; Columns: Predicted Class)}
-\label{tab:confusion}
+\begin{figure}[!t]
 \centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lrrrr@{}}
-\toprule
-True $\backslash$ Predicted & Glioma & Meningioma & No tumour & Pituitary \\
-\midrule
-Glioma & \textbf{3,734} & 23 & 10 & 6 \\
-Meningioma & 20 & \textbf{2,689} & 5 & 15 \\
-No tumour & 3 & 0 & \textbf{2,421} & 8 \\
-Pituitary & 2 & 7 & 4 & \textbf{3,117} \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\columnwidth]{fig_confusion.pdf}
+\caption{Pooled out-of-fold confusion matrix of folds 1--5 ($n = 12{,}064$). Each cell gives the image count and the row percentage; shading follows the row percentage on a logarithmic scale so that small error counts remain visible.}
+\label{fig:confusion}
+\end{figure}
 
 \subsection{Calibration}
 The model is well calibrated below 0.9 confidence and slightly under-confident above it (Fig.~\ref{fig:reliability}). In the top bin, which holds 11,803 images (97.8\%), accuracy was 99.64\% while mean confidence was 97.66\%; this gap accounts for almost all of the ECE. The highest probability assigned to any image was 0.988.
@@ -428,7 +427,7 @@ Fold & \shortstack{Augmented-\\family images} & \shortstack{Leaked (copy\\in tra
 This comparison bounds only the leakage that file names reveal. Grouping copies by file name reduces the 12,064 images to 8,438 clusters, whereas the de-duplicated Version~7 of the dataset retains 5,941 images~\cite{bdneuro2025v7}. Up to about 2,500 further near-duplicates, probably mostly across source collections, may therefore be invisible to our grouping. The ``other images'' in Table~\ref{tab:leak} are not proven leak-free. Our figures should be read as image-level estimates, and a duplicate-aware (grouped) split is the definitive test.
 
 \subsection{Where the Errors Come From}
-Error rates differ markedly by data source (Table~\ref{tab:errfam}). The 249 images named \fname{image(n)}, the test-split naming of one public source~\cite{bhuvaji2020kaggle}, have a 6.0\% error rate, seven times the average of 0.85\%. Users of a public mirror of a related compilation have reported mislabelled glioma images in this source~\cite{chaki2023dataport}. Thirteen of these 15 errors are gliomas predicted as meningioma or tumour-free, nine of them with confidence of 0.95 or more. This points to label noise rather than model failure. Expert re-reading of these images is needed to confirm this.
+Error rates differ markedly by data source (Table~\ref{tab:errfam}). The 249 images named \fname{image(n)}, the test-split naming of one public source~\cite{bhuvaji2020kaggle}, have a 6.0\% error rate, seven times the average of 0.85\%. Users of a public mirror of a related compilation have reported mislabelled glioma images in this source~\cite{chaki2023dataport}. Thirteen of these 15 errors are gliomas predicted as meningioma or tumour-free, nine of them with confidence of 0.95 or more. Among the four \fname{image(n)} gliomas in Fig.~\ref{fig:errors}, one appears to be a non-contrast CT slice (b) and one a T2-weighted MR slice (c), modalities that the dataset description does not mention. These errors therefore point to label noise and modality heterogeneity in this source rather than to model failure alone. Expert re-reading of these images is needed to confirm this.
 
 \begin{table}[!t]
 \caption{Error Rate by File-Name Family (Pooled Out-of-Fold Predictions)}
@@ -455,7 +454,7 @@ A second cluster consists of nine \fname{Tr-me\_*} meningiomas predicted as pitu
 \begin{figure*}[!t]
 \centering
 \figorplaceholder{fig5_confident_errors.png}{3.0in}{\textwidth}
-\caption{The eight most confident out-of-fold errors, each shown with its file-name family, true label, predicted label and confidence.}
+\caption{The eight most confident out-of-fold errors, each labelled with true class $\rightarrow$ predicted class, the predicted probability $p$ and the file-name family. Panel (b) appears to be a CT slice and panel (c) a T2-weighted MR slice, although the dataset is described as contrast-enhanced T1-weighted MRI.}
 \label{fig:errors}
 \end{figure*}
 
@@ -478,7 +477,7 @@ Published accuracies are not directly comparable to ours. Tummala \textit{et al.
 \item \textit{Image-level splitting:} Patient identifiers are unavailable, and cross-source near-duplicates beyond the file-name groups could not be excluded. The reported accuracy is therefore an image-level estimate, not evidence of generalisation to unseen patients. Next step: grouped five-fold cross-validation with groups formed from file-name stems and perceptual-hash near-duplicates, and a parallel analysis on the de-duplicated Version~7~\cite{bdneuro2025v7}.
 \item \textit{No component ablations or retrained baselines:} The contribution of the graph stream, recalibration, transformer and uncertainty gate is not isolated (Section~\ref{sec:params}), and no baseline was retrained under the same folds. Next step: the ablation set of Section~\ref{sec:params} and three to four standard CNN and transformer baselines on identical folds, compared by McNemar's test on out-of-fold predictions.
 \item \textit{Single dataset, no external test:} All images come from one compiled collection, part of which overlaps by naming with other public sets. An independent test set must first be checked for overlap with the training data.
-\item \textit{Provenance and label quality:} The origin of the images was inferred from file names and not verified by image matching. One source shows a raised error rate consistent with label noise. Expert re-reading of the 103 misclassified images would separate label noise from model error.
+\item \textit{Provenance and label quality:} The origin of the images was inferred from file names and not verified by image matching. One source shows a raised error rate consistent with label noise, and the collection mixes MR contrasts and contains at least one apparent CT image. Expert re-reading of the 103 misclassified images would separate label noise from model error.
 \item \textit{Single seed and stochastic selection:} Each fold was trained once (seed 42), and checkpoints were selected on a stochastic, saturated validation accuracy (Section~\ref{sec:calib}). Development was iterative: an earlier configuration was evaluated on fold~1 before the final design was fixed, so fold~1 was not strictly untouched during development.
 \item \textit{Two-dimensional slices:} The model sees single 2D slices and ignores volumetric context and other MRI sequences.
 \item \textit{Inference cost:} GPU latency was not measured. Graph construction on the CPU dominates inference time when repeated for ten TTA views.
@@ -493,7 +492,7 @@ These results are image-level estimates on one compiled dataset. The near-unifor
 
 % =====================================================================
 \section*{Data and Code Availability}
-The dataset is publicly available on Mendeley Data, Version~1 (doi:10.17632/zwr4ntf94j.1), under a CC~BY~4.0 licence~\cite{hira2025mendeley}. The unmodified copy used for training is mirrored at \url{https://www.kaggle.com/datasets/arafatrahmann/my-data221}. The training script, the fold assignments, the per-image out-of-fold predictions and the audit scripts are available at \todo{repository URL}.
+The dataset is publicly available on Mendeley Data, Version~1 (doi:10.17632/zwr4ntf94j.1), under a CC~BY~4.0 licence~\cite{hira2025mendeley}. The unmodified copy used for training is mirrored at \url{https://www.kaggle.com/datasets/arafatrahmann/my-data221}. The training script, the fold assignments, the per-image out-of-fold predictions and the audit scripts are available at \url{https://github.com/arafatrahmannoor/Paper-of-brain}.
 
 \section*{Ethics Statement}
 This study used only a public, de-identified dataset. No new data were collected and no ethics approval was required.
