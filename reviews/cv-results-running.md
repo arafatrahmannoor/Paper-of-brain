@@ -1,5 +1,7 @@
 # Five-fold CV: running audit (updated as folds arrive)
 
+> **All five folds are now in. The final, authoritative numbers are in [`final-cv-results.md`](final-cv-results.md).** This file is kept as the interim log written while folds 1–4 were arriving.
+
 Scripts:
 - `tools/audit_fold.py`: per fold, recomputes every metric from the predictions.
 - `tools/filename_families.py`: per fold, groups images by filename convention.
@@ -13,7 +15,7 @@ Scripts:
 | 2 | 2413 | 0.99254 | 0.99275 | 0.99235 | 0.99254 | 0.01903 | 0.01211 | 0.0434 | 18 | [0.9882, 0.9953] |
 | 3 | 2413 | 0.99254 | 0.99283 | 0.99230 | 0.99255 | 0.01879 | 0.01317 | 0.0467 | 18 | [0.9882, 0.9953] |
 | 4 | 2413 | 0.99461 | 0.99456 | 0.99457 | 0.99456 | 0.02306 | 0.00910 | 0.0406 | 13 | [0.9908, 0.9968] |
-| 5 | | | | | | | | | | |
+| 5 | 2412 | 0.98466 | 0.98402 | 0.98490 | 0.98443 | 0.02480 | 0.02562 | 0.0696 | 37 | [0.9789, 0.9889] |
 | *Interim mean ± SD (folds 1–4)* | | *0.99316 ± 0.00099* | *0.99318 ± 0.00092* | *0.99325 ± 0.00112* | *0.99320 ± 0.00095* | *0.01989 ± 0.00211* | *0.01190 ± 0.00193* | | | |
 | **Pooled OOF (folds 1–4)** | 9652 | **0.99316** | – | – | 0.99320 | – | – | – | 66 | [0.9913, 0.9946] |
 
