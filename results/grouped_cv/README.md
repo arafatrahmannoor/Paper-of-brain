@@ -13,6 +13,16 @@ Hardware: Kaggle, Tesla T4.
 | Ablation | Fold | Acc | Macro-P | Macro-R | Macro-F1 | ECE | Brier | Best epoch | Runtime |
 |---|---|---|---|---|---|---|---|---|---|
 | full | 1 (`FOLD_TO_RUN=0`) | 0.9706 | 0.9681 | 0.9685 | 0.9683 | 0.0140 | 0.0495 | 16 (stopped 21) | 6.81 h |
+| full | 2 (`FOLD_TO_RUN=1`) | 0.9797 | 0.9768 | 0.9803 | 0.9784 | 0.0139 | 0.0374 | 15 (stopped 20) | n/a |
+
+**Running pooled total (`full`, folds 1–2).** n = 4653, 116 errors, accuracy 0.9751. Confusion matrix, rows true and columns predicted:
+```
+glioma     1529   11   19    1
+meningioma   12 1054   17    9
+notumor      17    6  830    4
+pituitary     1    9   10 1124
+```
+Per-class recall: 0.9801 / 0.9652 / 0.9685 / 0.9825. Fold 2: 2310 test images, 47 errors, mean `w_image` 0.692, α and β still about 1/3 each, τ = 0.768.
 
 Fold 1, `full`: confusion matrix. Rows are true classes and columns are predicted classes, both in the order glioma, meningioma, notumor, pituitary. n = 2343, 69 errors.
 
