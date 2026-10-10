@@ -31,7 +31,7 @@
 | 7 | `single_gcn` | 0–4 | Three GNN operators vs GCN only (α/β learned ≈ ⅓) |
 | 8 | `no_recal` | 0–4 | Recalibration gates |
 
-- **Compute:** Kaggle gives about 30 GPU-hours per week. Note the runtime of one `full` fold, which is printed at the end, and plan from it. Priorities 1–4 are the minimum for a credible paper. 5–8 are strongly recommended.
+- **Compute:** Kaggle gives about 30 GPU-hours per week. One `full` fold took **6.81 h** on a T4, at about 17 min per epoch, which is dominated by the 232 ms/image CPU graph pyramid. Each fold therefore needs its own session. Every graph-using ablation costs about the same. `image_only` skips graph construction (`PlaceholderGraph`) and should be several times faster. Log every finished run in `results/grouped_cv/README.md`. Priorities 1–4 are the minimum for a credible paper. 5–8 are strongly recommended.
 - **Statistics:** all runs share the same grouped folds (`fold_assignment_grouped.csv`), so the out-of-fold predictions can be compared pairwise with McNemar's test. I'll compute this from the uploaded `*_predictions.csv` files.
 
 ## Smoke test (any machine, CPU)
