@@ -318,6 +318,15 @@ class GraphPyramid:
         ]
 
 
+class PlaceholderGraph:
+    """image_only never reads the graph; skip the ~230 ms/image CPU pyramid.
+    GraphPyramid is deterministic (no RNG), so the run is otherwise identical."""
+
+    def create_graph(self, pil_img):
+        return Data(x=torch.zeros((1, 24), dtype=torch.float32),
+                    edge_index=torch.zeros((2, 0), dtype=torch.long))
+
+
 # ============================================================================
 # MULTI-PATH GNN
 # ============================================================================
@@ -1326,7 +1335,7 @@ def main():
     use_amp = device.type == "cuda"
     print(f"🖥️ Device: {device}\n")
 
-    graph_builder = GraphPyramid()
+    graph_builder = PlaceholderGraph() if ABLATION == "image_only" else GraphPyramid()
     train_root = os.path.join(DATA_PATH, TRAIN_FOLDER)
     test_root = os.path.join(DATA_PATH, TEST_FOLDER)
 
