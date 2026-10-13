@@ -16,28 +16,57 @@ Hardware: Kaggle, Tesla T4.
 | full | 2 (`FOLD_TO_RUN=1`) | 0.9797 | 0.9768 | 0.9803 | 0.9784 | 0.0139 | 0.0374 | 15 (stopped 20) | n/a |
 | full | 3 (`FOLD_TO_RUN=2`) | 0.9516 | 0.9502 | 0.9543 | 0.9511 | 0.0131 | 0.0809 | 8 (stopped 13) | n/a |
 | full | 4 (`FOLD_TO_RUN=3`) | 0.9816 | 0.9815 | 0.9809 | 0.9811 | 0.0243 | 0.0301 | 11 (stopped 16) | n/a |
+| full | 5 (`FOLD_TO_RUN=4`) | 0.9434 | 0.9457 | 0.9358 | 0.9389 | 0.0248 | 0.0944 | 11 (stopped 16) | n/a |
 
-**Running pooled total (`full`, folds 1–4).** Regenerate with `python tools/aggregate_grouped_cv.py full`. The script also re-checks the fold membership, the absence of shared groups and the accuracy for every fold.
-- n = 9589, 283 errors, pooled accuracy 0.9705. Group-cluster bootstrap 95% CI: [0.9613, 0.9786].
-- Mean ± SD across folds: accuracy 0.9709 ± 0.0137, macro-F1 0.9697 ± 0.0136, ECE 0.0163 ± 0.0053.
+**Final 5-fold result (`full`, complete).** Regenerate with `python tools/aggregate_grouped_cv.py full`.
+- Every image appears in exactly one test fold: n = 12,064, 423 errors.
+- Pooled accuracy 0.9649. Group-cluster bootstrap 95% CI: [0.9550, 0.9739].
+- Mean ± SD across folds:
+  - accuracy 0.9654 ± 0.0171
+  - macro-P 0.9645 ± 0.0159
+  - macro-R 0.9639 ± 0.0191
+  - macro-F1 0.9636 ± 0.0181
+  - ECE 0.0180 ± 0.0060
+  - Brier 0.0585 ± 0.0280
 
-Confusion matrix, rows true and columns predicted:
+Pooled confusion matrix, rows true and columns predicted:
 ```
-glioma     2959   56   31    6
-meningioma   26 2107   22   18
-notumor      19   10 1937   19
-pituitary     4   42   30 2303
+glioma     3644   84   39    6
+meningioma   28 2658   23   20
+notumor      69   13 2311   39
+pituitary     4   68   30 3028
 ```
-Per-class recall: 0.9695 / 0.9696 / 0.9758 / 0.9681.
+Per-class recall: 0.9658 / 0.9740 / 0.9502 / 0.9674. Per-class precision: 0.9730 / 0.9416 / 0.9617 / 0.9790.
 
 **Errors cluster by source image.** The dataset contains offline-augmented copies of each source slice (`_BR_`, `_DA_`, `_HF_`, `_RO_`), and grouping keeps all copies of a slice in the same fold. When the model gets a source image wrong, it usually gets most of its copies wrong too.
-- Across folds 1–4, the 283 errors fall in only 107 of 3,098 groups.
 - Fold 3 (95.16%) is the low fold. 56% of its 123 errors come from 5 groups. In one, all 20 copies of `P_818` (pituitary) were predicted as notumor in 19 cases.
 - Fold 3 also stopped early: best epoch 8, stopped at 13. That is a legitimate early-stopping outcome, not a failed run.
 - The effective sample size is therefore closer to the number of groups than to the number of images. Report the group-cluster CI and the fold SD, not a binomial CI over images.
 - In fold 3, hospital-style files (`G_/M_/P_*`) have an error rate of 9.2%, against 1.4% for `Tr-/Te-*` files.
 
-GNN path weights α and β stay at about 1/3 in every fold. Mean `w_image` per fold: 0.82, 0.69, 0.72, 0.69.
+- Fold 5 (94.34%) shows the same pattern. 78 of its 140 errors come from 5 hospital no-tumour slices, each with 10–25 augmented copies. Examples: `N_378` (23 of 25 copies predicted as glioma), `N_375` (17 of 20 predicted as pituitary) and `N_39`.
+
+**Errors across all 5 folds.**
+
+By file source:
+
+| Source | Error rate | Errors / images |
+|---|---|---|
+| `G_/M_/N_/P_*` (hospital-style) | 5.89% | 250 / 4246 |
+| `Tr-/Te-*` (Kaggle-style) | 1.57% | 73 / 4642 |
+| Other names | 3.15% | 100 / 3176 |
+
+By augmentation:
+
+| Images | Error rate | Errors / images |
+|---|---|---|
+| Offline-augmented copies (`_XX_` suffix) | 5.93% | 216 / 3641 |
+| Originals | 2.46% | 207 / 8423 |
+
+- The 423 errors fall in 136 of 3,873 groups. In 91 of those groups, at least half the images are wrong.
+- The 10 worst groups account for 151 of the 423 errors.
+
+GNN path weights α and β stay at about 1/3 in all 5 folds. Mean `w_image` per fold: 0.82, 0.69, 0.72, 0.69, 0.73.
 
 Fold 1, `full`: confusion matrix. Rows are true classes and columns are predicted classes, both in the order glioma, meningioma, notumor, pituitary. n = 2343, 69 errors.
 
