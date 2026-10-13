@@ -39,7 +39,7 @@ pituitary     4   68   30 3028
 Per-class recall: 0.9658 / 0.9740 / 0.9502 / 0.9674. Per-class precision: 0.9730 / 0.9416 / 0.9617 / 0.9790.
 
 **Errors cluster by source image.** The dataset contains offline-augmented copies of each source slice (`_BR_`, `_DA_`, `_HF_`, `_RO_`), and grouping keeps all copies of a slice in the same fold. When the model gets a source image wrong, it usually gets most of its copies wrong too.
-- Fold 3 (95.16%) is the low fold. 56% of its 123 errors come from 5 groups. In one, all 20 copies of `P_818` (pituitary) were predicted as notumor in 19 cases.
+- Fold 3 (95.16%) is one of the two low folds. 56% of its 123 errors come from 5 groups. In one, 19 of the 20 copies of `P_818` (pituitary) were predicted as notumor.
 - Fold 3 also stopped early: best epoch 8, stopped at 13. That is a legitimate early-stopping outcome, not a failed run.
 - The effective sample size is therefore closer to the number of groups than to the number of images. Report the group-cluster CI and the fold SD, not a binomial CI over images.
 - In fold 3, hospital-style files (`G_/M_/P_*`) have an error rate of 9.2%, against 1.4% for `Tr-/Te-*` files.
