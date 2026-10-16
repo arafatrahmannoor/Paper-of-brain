@@ -220,8 +220,50 @@ def calculate_uncertainty_metrics(probs, targets, num_bins=10):
 # ============================================================================
 class GraphPyramid:
     SCALES = [4, 8, 16]
+    _EDGE_INDEX = None  # identical topology for every image; built once
 
     def create_graph(self, pil_img):
+        """Vectorised version of create_graph_reference (same features up to float32
+        rounding, same edges); about two orders of magnitude faster on the CPU."""
+        img = np.asarray(pil_img.convert("L").resize((224, 224)), dtype=np.float32)
+        feats = []
+        for g in self.SCALES:
+            ps = 224 // g
+            P = img.reshape(g, ps, g, ps).transpose(0, 2, 1, 3)        # (g, g, ps, ps)
+            flat = P.reshape(g, g, -1)
+            mean = flat.mean(-1)
+            std = flat.std(-1)
+            var = flat.var(-1)
+            pmin, pmax = flat.min(-1), flat.max(-1)
+            median = np.median(flat, axis=-1)
+            p25, p50, p75, p90 = np.percentile(flat, [25, 50, 75, 90], axis=-1)
+            gx = np.gradient(P, axis=2)
+            gy = np.gradient(P, axis=3)
+            grad_mag = np.sqrt(gx**2 + gy**2)
+            n = flat.shape[-1]
+            rows, cols = np.meshgrid(np.arange(g), np.arange(g), indexing="ij")
+            nr, nc = rows / g, cols / g
+            f = np.stack([
+                mean / 255.0, std / 255.0, pmin / 255.0, pmax / 255.0, median / 255.0,
+                var / (255.0**2), p25 / 255.0, p50 / 255.0, p75 / 255.0, p90 / 255.0,
+                np.abs(gx).mean((2, 3)) / 255.0, np.abs(gy).mean((2, 3)) / 255.0,
+                grad_mag.mean((2, 3)) / 255.0,
+                (flat > 128).sum(-1) / n, (flat < 64).sum(-1) / n,
+                (flat > mean[..., None]).sum(-1) / n,
+                ((flat > 64) & (flat < 192)).sum(-1) / n, (flat > 192).sum(-1) / n,
+                nr, nc, np.sqrt((nr - 0.5) ** 2 + (nc - 0.5) ** 2),
+                (rows + cols) / (2.0 * g), np.full((g, g), g / 16.0), np.full((g, g), 1.0 / g),
+            ], axis=-1).reshape(g * g, 24)
+            feats.append(f)
+        if GraphPyramid._EDGE_INDEX is None:
+            GraphPyramid._EDGE_INDEX = self.create_graph_reference(pil_img).edge_index
+        return Data(
+            x=torch.tensor(np.concatenate(feats), dtype=torch.float32),
+            edge_index=GraphPyramid._EDGE_INDEX,
+        )
+
+    def create_graph_reference(self, pil_img):
+        """Original per-patch implementation, kept for verification."""
         img = pil_img.convert("L").resize((224, 224))
         img = np.asarray(img, dtype=np.float32)
 
