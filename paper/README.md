@@ -26,15 +26,15 @@ Red text in the PDF marks an item still to be filled in:
 | 1 | Class samples | ✅ `fig1_classes.png`, re-composed from the first-submission panels; order matches the paper, internal title removed, (a)–(d) labels |
 | 2 | Architecture | ✅ `fig_architecture.tex`: vector TikZ diagram, edit its text directly in Overleaf. The model is identical in `brain_tumor_cv_v2.py`, so the planned experiments do not change it |
 | 3 | Graph pyramid on one slice | ✅ `fig3_graph_pyramid.png`, drawn on the glioma slice of Fig. 1(a) |
-| 4 | Pooled out-of-fold confusion matrix | ✅ `fig_confusion.pdf`, from the audited pooled counts of all 5 folds |
-| 5 | Reliability diagram | ✅ `fig4_reliability.pdf` |
+| 4 | Pooled out-of-fold confusion matrix | ✅ `fig_confusion.pdf`, from the duplicate-aware (grouped) 5-fold predictions; regenerate with `python tools/make_grouped_figures.py full` |
+| 5 | Reliability diagram | ✅ `fig4_reliability.pdf`, grouped 5-fold predictions, same script |
 | W | Study workflow (supervisor's request) | ✅ `fig_workflow.png`: the authors' diagram with two text fixes ("Public Brain MRI Dataset (Mendeley, v1)", "12,064 Images"). Replace it with a 300-dpi PowerPoint export that has the same two fixes |
-| 6 | Most confident errors | ✅ `fig5_confident_errors.png`, generated on Kaggle from the dataset |
+| 6 | Most confident errors | ✅ `fig5_confident_errors.png`, from the image-level (v1) run; the caption says so |
 
 ### Figures from the first submission
 - **CLAHE before/after figure:** the training code applies no CLAHE, so the figure and the CLAHE paragraph describe a step the model never saw.
 - **Fold-1 confusion matrix "Acc 0.9950":** it has 12 errors, while the audited final fold 1 has 17 (99.30%). It comes from an earlier configuration, not the reported model. It is replaced by Fig. 4.
-- **Workflow figure:** now included (see table above) with two text fixes. The ablation box stays, because the planned ablations match its four variants; delete the red caption note once their results are in the paper.
+- **Workflow figure:** now included (see table above) with two text fixes. The ablation box stays; the paper reports the image-only ablation (Section VI-G).
 
 ### Generating Fig. 6
 These are generated from the dataset on Kaggle (CPU is enough):

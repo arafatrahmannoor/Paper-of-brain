@@ -44,7 +44,7 @@ Per-class recall: 0.9658 / 0.9740 / 0.9502 / 0.9674. Per-class precision: 0.9730
 - The effective sample size is therefore closer to the number of groups than to the number of images. Report the group-cluster CI and the fold SD, not a binomial CI over images.
 - In fold 3, hospital-style files (`G_/M_/P_*`) have an error rate of 9.2%, against 1.4% for `Tr-/Te-*` files.
 
-- Fold 5 (94.34%) shows the same pattern. 78 of its 140 errors come from 5 hospital no-tumour slices, each with 10–25 augmented copies. Examples: `N_378` (23 of 25 copies predicted as glioma), `N_375` (17 of 20 predicted as pituitary) and `N_39`.
+- Fold 5 (94.34%) shows the same pattern. 78 of its 140 errors come from 5 source slices (four of them hospital no-tumour slices), each with 10–25 copies. Examples: `N_378` (23 of 25 copies predicted as glioma), `N_375` (17 of 20 predicted as pituitary) and `N_39`.
 
 **Errors across all 5 folds.**
 

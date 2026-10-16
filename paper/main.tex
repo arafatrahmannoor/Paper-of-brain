@@ -32,7 +32,7 @@
 
 \begin{document}
 
-\title{Uncertainty-Gated Fusion of EfficientNet-B3 and a Multi-Scale Graph Pyramid for Four-Class Brain Tumour MRI Classification: An Audited Cross-Validation Study}
+\title{Uncertainty-Gated Fusion of EfficientNet-B3 and a Multi-Scale Graph Pyramid for Four-Class Brain Tumour MRI Classification: A Duplicate-Aware Cross-Validation Study}
 
 \author{\todo{First Author},~\todo{Second Author},~and~\todo{Supervisor Name}%
 \thanks{\todo{Authors} are with the \todo{Department}, \todo{Institution}, \todo{City}, \todo{Country} (e-mail: \todo{corresponding author e-mail}).}%
@@ -43,7 +43,7 @@
 \maketitle
 
 \begin{abstract}
-Deep networks often report near-perfect accuracy on public brain tumour MRI collections, yet calibration and the effect of duplicated images are rarely examined. We propose a dual-stream classifier that pairs an ImageNet-pretrained EfficientNet-B3 with a three-level graph pyramid of 336 regional nodes processed by parallel GCN, GAT and TransformerConv paths. The two 384-dimensional embeddings are refined by dynamic recalibration and a two-token cross-modal transformer, and fused by a gate driven by Monte Carlo (MC) dropout uncertainty. The model (19.35\,M parameters) was evaluated on a public four-class dataset of 12,064 images, described by its publishers as contrast-enhanced T1-weighted MRI, with image-level stratified five-fold cross-validation and ten-view test-time augmentation, and every metric was recomputed from the saved per-image out-of-fold predictions. Accuracy was $99.15 \pm 0.39\%$ (range 98.47--99.46\%) and macro-F1 $99.15 \pm 0.40\%$; pooled accuracy was 99.15\% (95\% bootstrap CI 98.99--99.31\%). Class-wise sensitivity ranged from 98.53\% to 99.58\% and specificity was at least 99.68\%; only 0.20\% of tumour images were classified as tumour-free. The expected calibration error was $0.021 \pm 0.003$, reflecting mild under-confidence attributable to label smoothing. A file-level audit showed that 35.2\% of the images are offline-augmented copies of 620 source slices, almost all with a sibling in the training partition, yet their accuracy (99.15\%) matched that of the remaining images (99.14\%). Because patient identifiers are unavailable and cross-source near-duplicates cannot be excluded, these are image-level estimates; duplicate-aware validation, component ablations and external testing are required before claims of generalisation.
+Deep networks often report near-perfect accuracy on public brain tumour MRI collections, yet these collections contain offline-augmented copies and near-duplicate slices that can fall on both sides of an image-level split. We propose a dual-stream classifier that pairs an ImageNet-pretrained EfficientNet-B3 with a three-level graph pyramid of 336 regional nodes processed by parallel GCN, GAT and TransformerConv paths. The two 384-dimensional embeddings are refined by dynamic recalibration and a two-token cross-modal transformer, and fused by a gate driven by Monte Carlo (MC) dropout uncertainty. The model (19.35\,M parameters) was evaluated on a public four-class dataset of 12,064 images with duplicate-aware five-fold cross-validation: offline-augmented copies and perceptual-hash near-duplicates were merged into 3,873 groups, and no group was shared between training, validation and test data. Accuracy was $96.54 \pm 1.71\%$ (range 94.34--98.16\%) and macro-F1 $96.36 \pm 1.81\%$; pooled out-of-fold accuracy was 96.49\% (95\% group-bootstrap CI 95.50--97.37\%), with a pooled expected calibration error of 0.012. The same architecture reached $99.15 \pm 0.39\%$ under an image-level split, so duplicate leakage inflated accuracy by about 2.6 percentage points; the error rate of the augmented-copy family rose from 0.85\% to 5.89\%. Errors were concentrated in a few source slices, whose copies were misclassified together, and in one public sub-collection with an 18.5\% error rate. The audit also found 108 near-duplicate pairs with conflicting labels, four of them identical images filed under two classes. The image stream received most of the fusion weight (mean 0.73), and the three graph operators kept equal weights in every fold. \todo{Image-only ablation: one sentence with its five-fold accuracy and the McNemar comparison, once the runs are complete.} Patient identifiers are unavailable, so these remain slice-level estimates on one compiled dataset.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -58,20 +58,20 @@ Convolutional neural networks (CNNs) with transfer learning dominate this task a
 
 Evaluation practice is a third, larger concern. Public brain tumour collections are often compiled from earlier datasets and can contain offline-augmented copies and near-duplicate slices. When images rather than patients or source slices are split, related images can fall on both sides of a split. Such leakage is a documented cause of over-optimistic results in medical machine learning~\cite{roberts2021pitfalls,varoquaux2022failures,kapoor2023leakage,wen2020alzheimer}. A near-perfect accuracy is only interpretable together with an account of how the data were split and what the split could not prevent.
 
-This study addresses all three points. We combine an EfficientNet-B3 image stream~\cite{tan2019efficientnet} with a multi-scale graph stream and fuse them through recalibration, a cross-modal transformer and an uncertainty-guided gate based on MC dropout~\cite{gal2016dropout}. We then evaluate the model with an audit-first protocol: every metric is recomputed from saved per-image predictions, calibration is analysed bin by bin, and the duplicate structure of the dataset is measured rather than assumed away. We ask three research questions:
+This study addresses all three points. We combine an EfficientNet-B3 image stream~\cite{tan2019efficientnet} with a multi-scale graph stream and fuse them through recalibration, a cross-modal transformer and an uncertainty-guided gate based on MC dropout~\cite{gal2016dropout}. We then evaluate the model with a duplicate-aware protocol: augmented copies and near-duplicate slices are grouped before splitting, every metric is recomputed from saved per-image predictions, calibration is analysed bin by bin, and the same architecture is also evaluated under a conventional image-level split to measure how much leakage inflates accuracy. We ask three research questions:
 \begin{itemize}
-\item \textbf{RQ1:} Does a dual-stream CNN--graph model with uncertainty-gated fusion achieve high and stable cross-validated performance on four-class brain tumour MRI classification?
+\item \textbf{RQ1:} How accurate is a dual-stream CNN--graph model with uncertainty-gated fusion on four-class brain tumour MRI classification when no near-duplicate group is shared between training and test data?
 \item \textbf{RQ2:} How well calibrated are its probability estimates, and which design choices shape that calibration?
-\item \textbf{RQ3:} How much of the dataset consists of duplicated slices, and does their presence on both sides of the split measurably inflate accuracy?
+\item \textbf{RQ3:} How much of the dataset consists of duplicated slices, and how much does an image-level split that ignores them inflate accuracy?
 \end{itemize}
 
 The contributions of this paper are as follows:
 \begin{enumerate}
 \item A dual-stream architecture that couples EfficientNet-B3 with a three-level graph pyramid processed by GCN, GAT and TransformerConv paths, fused by dynamic recalibration, a two-token transformer and an MC-dropout uncertainty gate (Section~\ref{sec:method}).
-\item A fully audited five-fold evaluation: fold-wise and pooled out-of-fold metrics, bootstrap confidence intervals, per-class sensitivity and specificity, and a reliability analysis (Section~\ref{sec:results}).
-\item A quantification of offline-augmentation leakage in a public four-class dataset, with a direct comparison of accuracy on leaked and non-leaked test images (Section~\ref{sec:leak}).
-\item A parameter-level analysis of the trained models, which shows where capacity resides and which learned fusion parameters stayed near their initial values (Sections~\ref{sec:learned} and~\ref{sec:params}).
-\item Release of the training code, fold assignments and per-image out-of-fold predictions for independent re-analysis.
+\item A duplicate-aware five-fold evaluation, with groups formed from file-name stems and perceptual-hash near-duplicates: fold-wise and pooled out-of-fold metrics, group-bootstrap confidence intervals, per-class sensitivity and specificity, and a reliability analysis (Section~\ref{sec:results}).
+\item A direct measurement of duplicate leakage, by comparing the same architecture under image-level and grouped splits, and an audit that identifies label conflicts between near-duplicate images (Section~\ref{sec:leak}).
+\item An analysis of the trained fusion parameters and per-image gate weights, which shows how much each stream contributes in practice (Sections~\ref{sec:learned} and~\ref{sec:params}).
+\item Release of the training code, group and fold assignments and per-image out-of-fold predictions for independent re-analysis.
 \end{enumerate}
 
 % =====================================================================
@@ -155,7 +155,7 @@ The classifier learns two complementary views of the same slice: dense appearanc
 \begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{fig_workflow.png}
-\caption{Overview of the study workflow: (A)~dataset preparation, (B)~image and graph pre-processing, (C)~extraction of the visual and topological modalities, (D)~the proposed architecture (detailed in Fig.~\ref{fig:arch}), (E)~ablation study, (F)~result analysis and (G)~performance evaluation with ten-view test-time augmentation. \todo{The ablation study (E) is planned and its results are not yet reported; see Section~\ref{sec:params}.}}
+\caption{Overview of the study workflow: (A)~dataset preparation, (B)~image and graph pre-processing, (C)~extraction of the visual and topological modalities, (D)~the proposed architecture (detailed in Fig.~\ref{fig:arch}), (E)~ablation study (Section~\ref{sec:ablation}), (F)~result analysis and (G)~performance evaluation with ten-view test-time augmentation.}
 \label{fig:workflow}
 \end{figure*}}{}
 
@@ -167,7 +167,7 @@ The classifier learns two complementary views of the same slice: dense appearanc
 \end{figure}
 
 \subsection{Input Pre-Processing}
-Each image is read as three-channel RGB and resized to $224 \times 224$ pixels. The CNN input is normalised with ImageNet channel means $(0.485, 0.456, 0.406)$ and standard deviations $(0.229, 0.224, 0.225)$. Training augmentation applies a horizontal flip ($p = 0.5$) and colour jitter whose strength grows linearly over the first 15 epochs, up to brightness and contrast factors of $\pm 0.35$. The jitter also has saturation and hue terms; for slices stored as greyscale (identical channels) these leave the image unchanged, and they act only on images stored in colour. The same transformed image feeds both streams, so the two views stay spatially and photometrically aligned.
+Each image is read as three-channel RGB and resized to $224 \times 224$ pixels. The CNN input is normalised with ImageNet channel means $(0.485, 0.456, 0.406)$ and standard deviations $(0.229, 0.224, 0.225)$. Training augmentation applies a horizontal flip ($p = 0.5$) and brightness and contrast jitter whose strength grows linearly over the first 15 epochs, up to factors of $\pm 0.35$. Saturation and hue jitter are not used, because they leave slices stored as greyscale (identical channels) unchanged. The same transformed image feeds both streams, so the two views stay spatially and photometrically aligned.
 
 \subsection{Multi-Scale Graph Pyramid}
 The greyscale image is divided into non-overlapping grids of $s \times s$ patches for $s \in \{4, 8, 16\}$, giving patches of 56, 28 and 14 pixels (Fig.~\ref{fig:pyramid}). Each patch is a node, so every image yields a graph of
@@ -238,24 +238,28 @@ The concatenated vector $[w_g z_g \,\|\, w_i z_i] \in \R^{768}$ passes through l
 \end{equation}
 
 \subsection{Test-Time Augmentation}\label{sec:tta}
-At test time, class probabilities are averaged over ten deterministic views~\cite{wang2019tta}: identity, horizontal flip, rotations of $\pm 5^\circ$, brightness $\times 0.9$ and $\times 1.1$, contrast $\times 0.9$ and $\times 1.1$, saturation $\times 1.1$, and horizontal flip with brightness $\times 1.1$. Each view feeds both streams:
+At test time, class probabilities are averaged over ten deterministic views~\cite{wang2019tta}: identity, horizontal flip, rotations of $\pm 5^\circ$, brightness $\times 0.9$ and $\times 1.1$, contrast $\times 0.9$ and $\times 1.1$, a $1.05\times$ centre zoom, and horizontal flip with brightness $\times 1.1$. Each view feeds both streams:
 \begin{equation}
 p_{\mathrm{final}}(x) = \frac{1}{10} \sum_{a=1}^{10} \mathrm{softmax}\big(f(T_a(x))\big).
 \end{equation}
-For slices stored as greyscale, the saturation view equals the identity view, so for those images the ensemble effectively contains nine distinct views, with the original image counted twice. The TTA views are resized with the image library's default filter, whereas training uses bilinear resizing; this small preprocessing difference is reported for reproducibility.
+All views use the same resizing as training and validation.
 
 % =====================================================================
 \section{Experimental Setup and Evaluation Protocol}
 \subsection{Implementation}
-The model was implemented in PyTorch~\cite{paszke2019pytorch} with PyTorch Geometric~\cite{fey2019pyg} and the torchvision EfficientNet-B3. It was trained on single-GPU Kaggle notebook sessions (\todo{GPU model}; PyTorch \todo{version}, PyTorch Geometric \todo{version}) with automatic mixed precision. Each fold ran as a separate session, with only the fold index changed.
+The model was implemented in PyTorch~\cite{paszke2019pytorch} with PyTorch Geometric~\cite{fey2019pyg} and the torchvision EfficientNet-B3. It was trained on single-GPU Kaggle notebook sessions with an NVIDIA Tesla T4 (PyTorch \todo{version}, PyTorch Geometric \todo{version}) and automatic mixed precision. Each fold ran as a separate session, with only the fold index changed; one fold took about 17\,min per epoch and 6.8\,h in total.
 
 \subsection{Cross-Validation and Test Isolation}\label{sec:cv}
-Stratified five-fold cross-validation (shuffled, random state 42) was applied to the merged 12,064 images, giving test folds of 2,412--2,413 images with the class proportions of Table~\ref{tab:classes}. Within the remaining 80\% of each fold, a stratified 8\% subset (random state $42 + k$ for zero-based fold $k$) served for validation and checkpoint selection. On a whole-dataset basis, each fold used 73.6\% of images for training, 6.4\% for validation and 20\% for testing. Test images were used only after the fold's checkpoint had been selected and reloaded.
+\textit{Duplicate-aware groups:} Before splitting, related images were merged into groups by union--find. First, all files sharing a source-slice stem and class (\fname{G\_710.jpg}, \fname{G\_710\_RO\_.jpg}, \dots) were joined. Second, a 64-bit perceptual hash (pHash) was computed for every image, and any two images whose hashes differed in at most 5 bits were joined, regardless of file name or class. This reduced the 12,064 images to 3,873 groups: 1,871 single images and 2,002 groups of two or more (largest 93 images).
 
-The split is at image level. Patient identifiers are unavailable, so patient-level independence cannot be enforced, and the augmented copies described in Section~\ref{sec:data} can fall on both sides of a split. Section~\ref{sec:leak} quantifies this.
+\textit{Outer and inner splits:} Stratified group five-fold cross-validation (scikit-learn \texttt{StratifiedGroupKFold}, shuffled, random state 42) was applied to the merged images, giving test folds of 2,310--2,539 images with near-identical class proportions. Within the remaining data of each fold, about 8\% of the groups (a grouped split with random state $42 + k$ for zero-based fold $k$; 718--1,030 images) served for validation and checkpoint selection. For every fold, it was verified in code that no group was shared between training, validation and test images. Test images were used only after the fold's checkpoint had been selected and reloaded.
+
+Grouping removes the leakage that file names and image similarity reveal. Patient identifiers are unavailable, so different slices of one patient can still fall on both sides of a split, and the estimates remain slice-level rather than patient-level.
+
+\textit{Image-level reference:} To measure leakage, the same architecture was also evaluated with an earlier version of the training script that used a conventional image-level stratified split (test folds of 2,412--2,413 images) and selected checkpoints on validation accuracy (Section~\ref{sec:leak}).
 
 \subsection{Optimisation and Model Selection}
-The training configuration, identical for all folds, is listed in Table~\ref{tab:config}. The checkpoint with the highest validation accuracy was kept. Because the MC dropout in the gate also runs during validation, validation accuracy is itself a slightly stochastic estimate. We return to this in Section~\ref{sec:calib}.
+The training configuration, identical for all folds, is listed in Table~\ref{tab:config}. The checkpoint with the lowest validation cross-entropy was kept. Because the gate's MC dropout also runs during validation, the random number generator was re-seeded before every validation pass, so that the dropout masks, and therefore the selection criterion, did not change randomly from epoch to epoch.
 
 \begin{table}[!t]
 \caption{Training Configuration, Identical for All Folds}
@@ -269,8 +273,8 @@ Setting & Value \\
 Optimiser & AdamW~\cite{loshchilov2019adamw}, weight decay 0.01 \\
 Peak learning rate & $3 \times 10^{-4}$; $6 \times 10^{-5}$ for GAT, TransformerConv and cross-modal attention modules (with their normalisation layers) \\
 Schedule & OneCycle~\cite{smith2019superconvergence} over 30 epochs, 10\% warm-up, cosine annealing \\
-Batch size & 36 (247 training batches per epoch) \\
-Max.\ epochs / early stopping & 30 / patience 5 on validation accuracy \\
+Batch size & 36 (243--249 training batches per epoch) \\
+Max.\ epochs / early stopping & 30 / patience 5 on validation cross-entropy \\
 Loss & Section~\ref{sec:loss}: label smoothing 0.03, auxiliary weight $\lambda = 0.15$ \\
 Gradient clipping & global norm 1.0 \\
 MC-dropout samples / rate & $T = 20$ / $p = 0.20$ \\
@@ -293,41 +297,43 @@ Class-wise sensitivity (recall) and specificity are computed one-vs-rest. Calibr
 We also report the negative log-likelihood (NLL) of the true class.
 
 \subsection{Aggregation and Verification}
-Fold-level metrics are summarised as mean $\pm$ sample standard deviation ($n = 5$). Each image is predicted only by the model of the fold in which it was held out. The five prediction files were therefore concatenated into one set of 12,064 out-of-fold (OOF) predictions, used for the pooled confusion matrix, per-class analysis and reliability diagram. The five models are never ensembled on these data. Pooled 95\% confidence intervals come from 2,000 bootstrap resamples~\cite{efron1993bootstrap}, both over images and over clusters of augmented copies of the same slice.
+Fold-level metrics are summarised as mean $\pm$ sample standard deviation ($n = 5$). Each image is predicted only by the model of the fold in which it was held out. The five prediction files were therefore concatenated into one set of 12,064 out-of-fold (OOF) predictions, used for the pooled confusion matrix, per-class analysis and reliability diagram. The five models are never ensembled on these data. Pooled 95\% confidence intervals come from 2,000 bootstrap resamples~\cite{efron1993bootstrap} of whole duplicate groups, because errors are correlated within a group (Section~\ref{sec:errors}).
 
-Before analysis, every saved metric was recomputed independently from the per-image predictions. The five test folds were checked to be pairwise disjoint and to cover all 12,064 images exactly once. All recomputed values matched the saved ones (absolute differences below $10^{-11}$).
+Before analysis, every saved metric was recomputed independently from the per-image predictions. The five test folds were checked to be pairwise disjoint, to cover all 12,064 images exactly once and to share no group with their training data. All recomputed values matched the saved ones.
 
 % =====================================================================
 \section{Results}\label{sec:results}
+All results in this section come from the duplicate-aware split of Section~\ref{sec:cv}.
+
 \subsection{Fold-Wise Performance}
-Across the five folds, accuracy was $99.15 \pm 0.39\%$ and macro-F1 $99.15 \pm 0.40\%$ (Table~\ref{tab:folds}). Folds 1--4 lay within 99.25--99.46\%. Fold~5 reached 98.47\%, with 37 errors against 13--18 in the other folds.
+Across the five folds, accuracy was $96.54 \pm 1.71\%$ and macro-F1 $96.36 \pm 1.81\%$ (Table~\ref{tab:folds}). Folds 1, 2 and 4 reached 97.06--98.16\%; folds 3 and 5 reached 95.16\% and 94.34\%, with 123 and 140 errors. Early stopping selected checkpoints between epochs 8 and 16.
 
 \begin{table*}[!t]
-\caption{Held-Out Performance per Fold (Macro-Averaged Precision, Recall and F1)}
+\caption{Held-Out Performance per Fold Under the Duplicate-Aware Split (Macro-Averaged Precision, Recall and F1)}
 \label{tab:folds}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}crccccccccr@{}}
+\setlength{\tabcolsep}{2.1pt}
+\begin{tabular}{@{}crcccccccrc@{}}
 \toprule
-Fold & Images & Accuracy (\%) & Precision (\%) & Recall (\%) & F1 (\%) & ECE & Brier & NLL & Errors \\
+Fold & Images & Accuracy (\%) & Prec. (\%) & Recall (\%) & F1 (\%) & ECE & Brier & NLL & Errors & Best ep. \\
 \midrule
-1 & 2,413 & 99.30 & 99.26 & 99.38 & 99.32 & 0.0187 & 0.0132 & 0.0460 & 17 \\
-2 & 2,413 & 99.25 & 99.28 & 99.23 & 99.25 & 0.0190 & 0.0121 & 0.0434 & 18 \\
-3 & 2,413 & 99.25 & 99.28 & 99.23 & 99.25 & 0.0188 & 0.0132 & 0.0467 & 18 \\
-4 & 2,413 & 99.46 & 99.46 & 99.46 & 99.46 & 0.0231 & 0.0091 & 0.0406 & 13 \\
-5 & 2,412 & 98.47 & 98.40 & 98.49 & 98.44 & 0.0248 & 0.0256 & 0.0696 & 37 \\
+1 & 2,343 & 97.06 & 96.81 & 96.85 & 96.83 & 0.0140 & 0.0495 & 0.1281 & 69 & 16 \\
+2 & 2,310 & 97.97 & 97.68 & 98.03 & 97.84 & 0.0139 & 0.0374 & 0.1098 & 47 & 15 \\
+3 & 2,539 & 95.16 & 95.02 & 95.43 & 95.11 & 0.0131 & 0.0809 & 0.1890 & 123 & 8 \\
+4 & 2,397 & 98.16 & 98.15 & 98.09 & 98.11 & 0.0243 & 0.0301 & 0.0810 & 44 & 11 \\
+5 & 2,475 & 94.34 & 94.57 & 93.58 & 93.89 & 0.0248 & 0.0944 & 0.2064 & 140 & 11 \\
 \midrule
-\textbf{Mean $\pm$ SD} & -- & $\mathbf{99.15 \pm 0.39}$ & $\mathbf{99.14 \pm 0.42}$ & $\mathbf{99.16 \pm 0.39}$ & $\mathbf{99.15 \pm 0.40}$ & $\mathbf{0.021 \pm 0.003}$ & $\mathbf{0.015 \pm 0.006}$ & $\mathbf{0.049 \pm 0.012}$ & 103 \\
+\textbf{Mean $\pm$ SD} & -- & $\mathbf{96.54 \pm 1.71}$ & $\mathbf{96.45 \pm 1.59}$ & $\mathbf{96.39 \pm 1.91}$ & $\mathbf{96.36 \pm 1.81}$ & $\mathbf{0.018 \pm 0.006}$ & $\mathbf{0.058 \pm 0.028}$ & $\mathbf{0.143 \pm 0.053}$ & 423 & -- \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
 \subsection{Pooled Out-of-Fold Performance}
-Pooling the 12,064 out-of-fold predictions gave 11,961 correct classifications: 99.15\% accuracy (95\% CI 98.99--99.31\%) and macro-F1 99.15\% (98.98--99.31\%). Resampling whole clusters of augmented copies instead of single images widened the intervals by at most 0.02 percentage points (accuracy 98.97--99.32\%). Pooled ECE was 0.020 (0.019--0.022), Brier 0.015 (0.012--0.017) and NLL 0.049.
+Pooling the 12,064 out-of-fold predictions gave 11,641 correct classifications: 96.49\% accuracy (95\% group-bootstrap CI 95.50--97.37\%) and macro-F1 96.40\% (95.36--97.29\%). Pooled ECE was 0.012 (0.008--0.018), Brier 0.059 (0.044--0.076) and NLL 0.144. Resampling single images instead of groups would give a CI about half as wide (accuracy 96.17--96.83\%), which overstates the precision because errors cluster within groups.
 
 \subsection{Per-Class Performance and Errors}
-All four classes exceeded 98.5\% sensitivity and 99.6\% specificity (Table~\ref{tab:perclass}). Pituitary tumours and tumour-free scans were recognised best; meningioma was hardest.
+Sensitivity ranged from 95.02\% (no tumour) to 97.40\% (meningioma), and specificity from 98.23\% to 99.27\% (Table~\ref{tab:perclass}). Meningioma had the lowest precision, because glioma and pituitary images were often called meningioma.
 
 \begin{table}[!t]
 \caption{Per-Class Results on the Pooled Out-of-Fold Predictions ($n = 12{,}064$)}
@@ -339,37 +345,37 @@ All four classes exceeded 98.5\% sensitivity and 99.6\% specificity (Table~\ref{
 \toprule
 Class & Support & Prec. (\%) & Sens. (\%) & Spec. (\%) & F1 (\%) \\
 \midrule
-Glioma & 3,773 & 99.33 & 98.97 & 99.70 & 99.15 \\
-Meningioma & 2,729 & 98.90 & 98.53 & 99.68 & 98.72 \\
-No tumour & 2,432 & 99.22 & 99.55 & 99.80 & 99.38 \\
-Pituitary & 3,130 & 99.08 & 99.58 & 99.68 & 99.33 \\
+Glioma & 3,773 & 97.30 & 96.58 & 98.78 & 96.94 \\
+Meningioma & 2,729 & 94.16 & 97.40 & 98.23 & 95.75 \\
+No tumour & 2,432 & 96.17 & 95.02 & 99.04 & 95.59 \\
+Pituitary & 3,130 & 97.90 & 96.74 & 99.27 & 97.32 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The 103 errors concentrate between tumour types (Fig.~\ref{fig:confusion}). Glioma--meningioma confusions account for 43 (42\%), meningioma--pituitary for 22 and glioma--pituitary for 8. Nineteen of 9,632 tumour images (0.20\%) were called tumour-free, and 11 of 2,432 tumour-free images (0.45\%) were called tumour.
+The 423 errors are spread over several class pairs (Fig.~\ref{fig:confusion}): glioma--meningioma 112 (26\%), glioma--no tumour 108 (26\%), meningioma--pituitary 88 (21\%), no tumour--pituitary 69, meningioma--no tumour 36 and glioma--pituitary 10. Ninety-two of 9,632 tumour images (0.96\%) were called tumour-free, and 121 of 2,432 tumour-free images (4.98\%) were called tumour, 69 of them glioma.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{fig_confusion.pdf}
-\caption{Pooled out-of-fold confusion matrix of folds 1--5 ($n = 12{,}064$). Each cell gives the image count and the row percentage; shading follows the row percentage on a logarithmic scale so that small error counts remain visible.}
+\caption{Pooled out-of-fold confusion matrix of the duplicate-aware five-fold cross-validation ($n = 12{,}064$). Each cell gives the image count and the row percentage; shading follows the row percentage on a logarithmic scale so that small error counts remain visible.}
 \label{fig:confusion}
 \end{figure}
 
 \subsection{Calibration}
-The model is well calibrated below 0.9 confidence and slightly under-confident above it (Fig.~\ref{fig:reliability}). In the top bin, which holds 11,803 images (97.8\%), accuracy was 99.64\% while mean confidence was 97.66\%; this gap accounts for almost all of the ECE. The highest probability assigned to any image was 0.988.
+The confidence of the top bin matched its accuracy closely: 11,577 images (96.0\%) were predicted with confidence above 0.9, with 98.17\% accuracy at 97.73\% mean confidence (Fig.~\ref{fig:reliability}). Below 0.9 the model was over-confident; for example, the 206 images in the 0.8--0.9 bin had 64.1\% accuracy at 86.0\% mean confidence. The highest probability assigned to any image was 0.984.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{fig4_reliability.pdf}
-\caption{Reliability diagram of the pooled out-of-fold predictions of folds 1--5 (12,064 images).}
+\caption{Reliability diagram of the pooled out-of-fold predictions of the duplicate-aware cross-validation (12,064 images, ten equal-width bins; numbers above the bars give the images per bin).}
 \label{fig:reliability}
 \end{figure}
 
-Confidence is informative for triage. The 261 images (2.2\%) predicted with confidence below 0.9 had 77.0\% accuracy and contained 60 of the 103 errors (58\%). However, 29 errors (28\%) were made at confidence of 0.95 or higher, so low confidence does not flag every error.
+Confidence is only partly informative for triage. The 487 images (4.0\%) predicted with confidence below 0.9 had 56.7\% accuracy and contained 211 of the 423 errors (50\%). However, 199 errors (47\%) were made at confidence of 0.95 or higher, and 175 of these belonged to groups in which at least half of the copies were misclassified (Section~\ref{sec:errors}).
 
 \subsection{Model Size and Cost}
-The model has 19,350,155 trainable parameters (Table~\ref{tab:params}). A single forward pass costs about 2.25 GFLOPs of dense operations, measured with the PyTorch FLOP counter (\texttt{torch.utils.flop\_counter}) at $224 \times 224$ input; graph message passing is not included.
+The model has 19,350,155 trainable parameters (Table~\ref{tab:params}). A single forward pass costs about 2.26 GFLOPs of dense operations, measured with the PyTorch FLOP counter (\texttt{torch.utils.flop\_counter}) at $224 \times 224$ input; graph message passing is not included.
 
 \begin{table}[!t]
 \caption{Parameter Count per Module (Identical in All Five Checkpoints)}
@@ -393,106 +399,137 @@ Uncertainty heads and $\tau$ & 149,385 & 0.8\% \\
 \end{tabular}
 \end{table}
 
-On a four-core Intel Xeon virtual machine (2.8\,GHz), one forward pass took about 84\,ms and building one graph took about 156\,ms. Graph construction therefore dominates CPU inference, and with ten TTA views it is repeated ten times per image. GPU latency was not measured.
+On the Tesla T4, one forward pass, including the 20 MC-dropout samples of the gate, took 21.1\,ms per image. Building one graph on the notebook's CPU took 232\,ms, and the complete ten-view TTA pipeline, which builds a graph for every view, took 2.63\,s per image. Graph construction therefore dominates inference time.
 
 \subsection{Learned Fusion Parameters}\label{sec:learned}
-The learned path weights stayed close to their initial value of $1/3$. In fold~1, $\mathrm{softmax}(a) = (0.328, 0.333, 0.339)$ and $\mathrm{softmax}(b) = (0.333, 0.337, 0.330)$ for (GCN, GAT, TransformerConv). Fold~2 gave $(0.331, 0.334, 0.335)$ and $(0.333, 0.337, 0.331)$. The gate temperature rose from its initial 0.693 to 0.764 (fold~1) and 0.773 (fold~2). Folds 3--5 were not inspected for these values.
+The learned path weights stayed close to their initial value of $1/3$ in all five folds: every component of $\mathrm{softmax}(a)$ and $\mathrm{softmax}(b)$ lay between 0.327 and 0.341 (fold~1: $(0.329, 0.330, 0.341)$ and $(0.333, 0.336, 0.330)$ for GCN, GAT and TransformerConv). The gate temperature rose from its initial 0.693 to 0.743--0.768.
 
-% =====================================================================
-\section{Discussion}
-\subsection{Does Duplicate Leakage Inflate Accuracy?}\label{sec:leak}
-Augmented copies crossed the split for almost every affected image, yet they were classified no better than the rest (Table~\ref{tab:leak}). We call a test image \textit{leaked} when another copy of the same source slice was among the test images of a different fold, and therefore in this fold's training data. Pooled over folds, 4,238 of the 4,246 augmented-family images (99.8\%) were leaked. Their accuracy was 99.15\%, against 99.14\% for the other 7,826 images. Per-fold differences went in both directions, consistent with noise.
+The uncertainty gate favoured the image stream. Averaged over the ten TTA views, the image weight $w_i$ had a mean of 0.731 and a median of 0.866, and it exceeded 0.5 for 79.5\% of the test images (fold means 0.82, 0.69, 0.72, 0.69 and 0.73). Misclassified images had a higher mean image weight (0.806) than correctly classified ones (0.729).
+
+\subsection{Ablation: Image Stream Alone}\label{sec:ablation}
+To test whether the graph stream and the fusion modules add to the EfficientNet-B3 stream, the image-only variant (EfficientNet-B3 with the same projection head and classifier, no graph stream, recalibration, transformer or gate) was trained on the same grouped folds with otherwise identical settings (Table~\ref{tab:ablation}). \todo{Results and McNemar's test on the paired out-of-fold predictions to be inserted when all five image-only folds are complete.}
 
 \begin{table}[!t]
-\caption{Accuracy of Test Images Whose Source Slice Was Also in the Training Partition (Leaked), Versus All Other Test Images}
-\label{tab:leak}
+\caption{Ablation on the Same Duplicate-Aware Folds (Mean $\pm$ SD Over Five Folds; Pooled Accuracy in Parentheses)}
+\label{tab:ablation}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{@{}crrcc@{}}
+\begin{tabular}{@{}lccc@{}}
 \toprule
-Fold & \shortstack{Augmented-\\family images} & \shortstack{Leaked (copy\\in training)} & \shortstack{Acc., leaked\\(\%)} & \shortstack{Acc., other\\images (\%)} \\
+Variant & Accuracy (\%) & Macro-F1 (\%) & ECE \\
 \midrule
-1 & 856 & 853 (99.6\%) & 98.83 & 99.55 \\
-2 & 832 & 831 (99.9\%) & 99.52 & 99.12 \\
-3 & 833 & 831 (99.8\%) & 99.28 & 99.24 \\
-4 & 853 & 852 (99.9\%) & 99.65 & 99.36 \\
-5 & 872 & 871 (99.9\%) & 98.51 & 98.44 \\
-\midrule
-\textbf{Pooled} & \textbf{4,246} & \textbf{4,238 (99.8\%)} & \textbf{99.15} & \textbf{99.14} \\
+Full model & $96.54 \pm 1.71$ (96.49) & $96.36 \pm 1.81$ & $0.018 \pm 0.006$ \\
+Image stream only & \todo{--} & \todo{--} & \todo{--} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-This comparison bounds only the leakage that file names reveal. Grouping copies by file name reduces the 12,064 images to 8,438 clusters, whereas the de-duplicated Version~7 of the dataset retains 5,941 images~\cite{bdneuro2025v7}. Up to about 2,500 further near-duplicates, probably mostly across source collections, may therefore be invisible to our grouping. The ``other images'' in Table~\ref{tab:leak} are not proven leak-free. Our figures should be read as image-level estimates, and a duplicate-aware (grouped) split is the definitive test.
-
-\subsection{Where the Errors Come From}
-Error rates differ markedly by data source (Table~\ref{tab:errfam}). The 249 images named \fname{image(n)}, the test-split naming of one public source~\cite{bhuvaji2020kaggle}, have a 6.0\% error rate, seven times the average of 0.85\%. Users of a public mirror of a related compilation have reported mislabelled glioma images in this source~\cite{chaki2023dataport}. Thirteen of these 15 errors are gliomas predicted as meningioma or tumour-free, nine of them with confidence of 0.95 or more. Among the four \fname{image(n)} gliomas in Fig.~\ref{fig:errors}, one appears to be a non-contrast CT slice (b) and one a T2-weighted MR slice (c), modalities that the dataset description does not mention. These errors therefore point to label noise and modality heterogeneity in this source rather than to model failure alone. Expert re-reading of these images is needed to confirm this.
+% =====================================================================
+\section{Discussion}
+\subsection{How Much Does Duplicate Leakage Inflate Accuracy?}\label{sec:leak}
+The same architecture lost 2.6 percentage points of accuracy when near-duplicate groups were kept on one side of the split, and its error count rose fourfold (Table~\ref{tab:leak}). Under the image-level split, accuracy was $99.15 \pm 0.39\%$ with 103 errors; under the duplicate-aware split it was $96.54 \pm 1.71\%$ with 423 errors. Sensitivity fell for every class, most for no tumour (99.55\% to 95.02\%).
 
 \begin{table}[!t]
-\caption{Error Rate by File-Name Family (Pooled Out-of-Fold Predictions)}
+\caption{The Same Architecture Under an Image-Level and a Duplicate-Aware Five-Fold Split}
+\label{tab:leak}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Metric & Image-level split & Duplicate-aware split \\
+\midrule
+Accuracy, mean $\pm$ SD (\%) & $99.15 \pm 0.39$ & $96.54 \pm 1.71$ \\
+Pooled accuracy (\%) & 99.15 & 96.49 \\
+Macro-F1, mean $\pm$ SD (\%) & $99.15 \pm 0.40$ & $96.36 \pm 1.81$ \\
+ECE, mean $\pm$ SD & $0.021 \pm 0.003$ & $0.018 \pm 0.006$ \\
+Errors (of 12,064) & 103 & 423 \\
+\midrule
+Sensitivity, glioma (\%) & 98.97 & 96.58 \\
+Sensitivity, meningioma (\%) & 98.53 & 97.40 \\
+Sensitivity, no tumour (\%) & 99.55 & 95.02 \\
+Sensitivity, pituitary (\%) & 99.58 & 96.74 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The increase was largest where duplication is greatest (Table~\ref{tab:errfam}). The error rate of the augmented-copy family (\fname{G/M/P/N\_\#\#\#}), whose seven copies of each slice had almost always been split between training and test, rose sevenfold, from 0.85\% to 5.89\%. Error rates also rose in every other large family. This is consistent with the perceptual-hash grouping having removed near-duplicates across source collections, which file names do not reveal.
+
+\begin{table}[!t]
+\caption{Error Rate by File-Name Family Under the Two Splits (Pooled Out-of-Fold Predictions)}
 \label{tab:errfam}
 \centering
 \footnotesize
-\begin{tabular}{@{}lrrr@{}}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrcc@{}}
 \toprule
-File-name family & Images & Errors & Error rate (\%) \\
+File-name family & Images & \shortstack{Image-level\\error (\%)} & \shortstack{Duplicate-aware\\error (\%)} \\
 \midrule
-\fname{image(n)} & 249 & 15 & 6.02 \\
-\fname{N\#}, \fname{\# no} & 76 & 1 & 1.32 \\
-\fname{Tr-xx\_\#\#\#\#} & 3,784 & 37 & 0.98 \\
-\fname{G/M/P/N\_\#\#\#} (+ augmentations) & 4,246 & 36 & 0.85 \\
-\fname{gg/m/p (n)} & 935 & 6 & 0.64 \\
-\fname{\#.jpg} & 1,914 & 6 & 0.31 \\
-\fname{Te-xx\_\#\#\#\#} & 858 & 2 & 0.23 \\
+\fname{image(n)} & 249 & 6.02 & 18.47 \\
+\fname{G/M/P/N\_\#\#\#} (+ aug.) & 4,246 & 0.85 & 5.89 \\
+\fname{\#.jpg} & 1,914 & 0.31 & 2.09 \\
+\fname{Tr-xx\_\#\#\#\#} & 3,784 & 0.98 & 1.61 \\
+\fname{gg/m/p (n)} & 935 & 0.64 & 1.50 \\
+\fname{Te-xx\_\#\#\#\#} & 858 & 0.23 & 1.40 \\
+\fname{N\#}, \fname{\# no} & 76 & 1.32 & 0.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A second cluster consists of nine \fname{Tr-me\_*} meningiomas predicted as pituitary tumours with confidence 0.95--0.98 (the most confident errors are shown in Fig.~\ref{fig:errors}). Three have near-consecutive identifiers (0828, 0829, 0831) and may be neighbouring slices of one patient. Meningiomas near the sella can resemble pituitary adenomas, so these cases may reflect genuine diagnostic difficulty. Errors also cluster within source slices: for four slices, two copies of the same slice were misclassified together (one slice in fold~1, one in fold~3 and two in fold~5). Errors are therefore not independent, and image-level confidence intervals are somewhat optimistic.
+Within the image-level run, this leakage was invisible. Test images whose augmented siblings were in training had the same accuracy as the remaining images (99.15\% against 99.14\%), which suggested that leakage did not matter. The grouped split shows that it did. The ``remaining'' images were not leak-free either, because many had near-duplicates from other source collections in training. A within-run comparison therefore cannot replace a grouped re-split. One caveat applies: the image-level run used an earlier version of the training script, which also selected checkpoints on validation accuracy, applied saturation and hue jitter, and used a saturation view instead of the zoom view in TTA. These differences are small and are unlikely to explain a fourfold increase in errors that is concentrated in the duplicated families, but the two runs do not differ in the split alone.
+
+\textit{Label conflicts:} The hash comparison also exposed inconsistent labels. Of the near-duplicate pairs, 108 carry different labels: glioma--meningioma 49, glioma--no tumour 45, meningioma--no tumour 10 and meningioma--pituitary 4. In total, 25 groups (538 images) contain more than one class. The four meningioma--pituitary pairs have identical hashes: four images named \fname{Tr-me\_0828}, \fname{0829}, \fname{0831} and \fname{0942} (meningioma) are, after a horizontal flip, the images \fname{P\_834\_HF\_}, \fname{P\_836\_HF\_}, \fname{P\_843\_HF\_} and \fname{P\_833\_HF\_} (pituitary). In the image-level run, all four meningiomas were predicted as pituitary, with confidence 0.95--0.97. They are label conflicts within the dataset, not model failures, and under the grouped split one image of each pair is necessarily counted as an error.
+
+\subsection{Where the Errors Come From}\label{sec:errors}
+Errors cluster within source slices. The 423 errors fall in only 136 of the 3,873 groups; in 91 of these groups at least half of the images were misclassified, and these groups account for 338 errors (80\%). The ten worst groups alone hold 151 errors. For example, 23 of 25 copies of the tumour-free slice \fname{N\_378} were called glioma and 17 of 20 copies of \fname{N\_375} were called pituitary (both in fold~5), and 19 of 20 copies of the pituitary slice \fname{P\_818} were called tumour-free (fold~3). When the model fails on a source slice, it fails on most of its augmented copies, often with high confidence. Several of these groups also contain images from another naming family; the group of \fname{N\_378}, for instance, includes \fname{1729.jpg}, a cross-source duplicate that only the hash comparison revealed. Offline-augmented copies had a higher error rate than the remaining images (5.93\% against 2.46\%), because they come in large groups that succeed or fail together.
+
+This clustering explains the fold-to-fold variation. In fold~3, 56\% of the 123 errors came from five groups, and in fold~5, 78 of the 140 errors came from five source slices, four of them tumour-free. Which hard slices a fold happens to contain therefore matters more than the number of test images, and the effective sample size is closer to the number of groups than to the number of images. This is why we report group-bootstrap intervals.
+
+The second source of errors is the \fname{image(n)} family, the test-split naming of one public source~\cite{bhuvaji2020kaggle}. Its error rate was 18.5\% (46 of 249), three times that of the next family. Users of a public mirror of a related compilation have reported mislabelled glioma images in this source~\cite{chaki2023dataport}, and its misclassified images include an apparent CT slice and a T2-weighted slice, modalities that the dataset description does not mention (Fig.~\ref{fig:errors}). These errors point to label noise and modality heterogeneity rather than to model failure alone; expert re-reading is needed to confirm this.
 
 \begin{figure*}[!t]
 \centering
 \figorplaceholder{fig5_confident_errors.png}{3.0in}{\textwidth}
-\caption{The eight most confident out-of-fold errors, each labelled with true class $\rightarrow$ predicted class, the predicted probability $p$ and the file-name family. Panel (b) appears to be a CT slice and panel (c) a T2-weighted MR slice, although the dataset is described as contrast-enhanced T1-weighted MRI.}
+\caption{The eight most confident out-of-fold errors of the image-level run, each labelled with true class $\rightarrow$ predicted class, the predicted probability $p$ and the file-name family. Panel (b) appears to be a CT slice and panel (c) a T2-weighted MR slice, although the dataset is described as contrast-enhanced T1-weighted MRI.}
 \label{fig:errors}
 \end{figure*}
 
 \subsection{Calibration and Fold-to-Fold Variability}\label{sec:calib}
-The residual miscalibration is a ceiling effect of label smoothing. With $\varepsilon = 0.03$ and four classes, the training target for the true class is $1 - \varepsilon + \varepsilon/4 = 0.9775$. Training pulls the predicted probability of the true class towards this target rather than towards 1; accordingly, mean confidence in the top bin is 97.66\% (maximum 0.988), while top-bin accuracy is 99.64\%. Label smoothing is known to produce such conservative confidence~\cite{muller2019labelsmoothing}. The ECE we report therefore reflects the loss design, not the uncertainty gate, whose contribution to calibration this study does not isolate. Post-hoc temperature scaling fitted on the validation split~\cite{guo2017calibration} would probably remove most of the gap.
+In the top confidence bin, confidence and accuracy nearly coincided (97.7\% and 98.2\%). This agrees with the label-smoothing target: with $\varepsilon = 0.03$ and four classes, the training target for the true class is $1 - \varepsilon + \varepsilon/4 = 0.9775$, and the highest predicted probability was 0.984~\cite{muller2019labelsmoothing}. Below 0.9 the model was over-confident, and almost half of the errors were made with confidence of at least 0.95, mostly in groups that were misclassified as a whole. Confidence thresholds therefore catch hesitant predictions but not systematic failures on a source slice. Post-hoc temperature scaling fitted on the validation split~\cite{guo2017calibration} could reduce the mid-range over-confidence, but not these confident group-level errors.
 
-Fold~5 was the only weak fold. It produced 140 predictions below 0.9 confidence, against 19--40 in the other folds, and its errors rose in all major data sources and in both original folders. This pattern points to a weaker trained model rather than a harder test fold. A plausible cause is checkpoint selection on validation accuracy: on about 770 validation images near 99\% accuracy, successive epochs differ by one or two images, and the gate's MC dropout adds sampling noise. Selecting on validation loss with fixed dropout seeds would remove this source of variability.
+The pooled ECE (0.012) is lower than the mean of the fold-wise values (0.018), because fold-specific deviations partly cancel when the folds are pooled. Checkpoint selection was deterministic in this run, so the remaining fold-to-fold variation reflects the data in each fold rather than random selection.
 
 \subsection{What the Trained Parameters Reveal}\label{sec:params}
-The parameter analysis tempers the architectural claims. The graph stream holds 3.2\% of the parameters, while the two-token cross-modal transformer holds 27.5\%; with two tokens, each attention head reduces to a $2 \times 2$ weighting of the modalities. The learnable path weights of the multi-path GNN stayed within 0.006 of $1/3$ in both inspected folds, so the three operators act as an equal-weight average rather than an adaptively selected mixture. The gate temperature moved only slightly from its initial value.
+The parameter analysis tempers the architectural claims. The graph stream holds 3.2\% of the parameters, while the two-token cross-modal transformer holds 27.5\%; with two tokens, each attention head reduces to a $2 \times 2$ weighting of the modalities. The learnable path weights of the multi-path GNN stayed within 0.008 of $1/3$ in all five folds, so the three operators act as an equal-weight average rather than an adaptively selected mixture. The gate gave the image stream most of the weight, and it gave it even more weight on misclassified images, so it did not route hard cases to the graph stream.
 
-None of this shows that the components are useless. It does show that their individual contributions are not established by the present experiments. Component ablations under the same folds are required: image-only, graph-only, concatenation, fixed 0.5/0.5 gate, transformer replaced by a multilayer perceptron, and a single GNN operator.
+None of this shows that the components are useless, and the image-only ablation (Section~\ref{sec:ablation}) tests the combined contribution of the graph stream and the fusion modules. \todo{One or two sentences interpreting the ablation once the image-only results are in.} The individual contributions of recalibration, the transformer, the uncertainty gate and the three GNN operators are not isolated by the present experiments.
 
 \subsection{Relation to Prior Results}
-Published accuracies are not directly comparable to ours. Tummala \textit{et al.} reported 98.7\% with a ViT ensemble on the three-class figshare data~\cite{tummala2022classification}, and G\"{u}rsoy and Kaya 93.68\% with a CNN--GCN hybrid on a 10,847-image collection~\cite{gursoy2024braingcn}. Datasets, class sets and split units differ across these studies, and duplication levels are rarely reported. We therefore make no state-of-the-art claim. A fair comparison requires retraining baselines under identical, duplicate-aware folds.
+Published accuracies are not directly comparable to ours. Tummala \textit{et al.} reported 98.7\% with a ViT ensemble on the three-class figshare data~\cite{tummala2022classification}, and G\"{u}rsoy and Kaya 93.68\% with a CNN--GCN hybrid on a 10,847-image collection~\cite{gursoy2024braingcn}. Datasets, class sets and split units differ across these studies, and duplication levels are rarely reported. Our own image-level result of 99.15\% would have ranked among the highest published figures, yet 2.6 points of it came from duplicate leakage. We therefore make no state-of-the-art claim, and we recommend that accuracies on compiled brain tumour collections be reported under a duplicate-aware split.
 
 % =====================================================================
 \section{Limitations and Future Work}
 \begin{enumerate}
-\item \textit{Image-level splitting:} Patient identifiers are unavailable, and cross-source near-duplicates beyond the file-name groups could not be excluded. The reported accuracy is therefore an image-level estimate, not evidence of generalisation to unseen patients. Next step: grouped five-fold cross-validation with groups formed from file-name stems and perceptual-hash near-duplicates, and a parallel analysis on the de-duplicated Version~7~\cite{bdneuro2025v7}.
-\item \textit{No component ablations or retrained baselines:} The contribution of the graph stream, recalibration, transformer and uncertainty gate is not isolated (Section~\ref{sec:params}), and no baseline was retrained under the same folds. Next step: the ablation set of Section~\ref{sec:params} and three to four standard CNN and transformer baselines on identical folds, compared by McNemar's test on out-of-fold predictions.
+\item \textit{Slice-level, not patient-level, grouping:} Patient identifiers are unavailable. Grouping by file-name stem and perceptual hash removes augmented copies and close near-duplicates, but different slices of one patient can still fall on both sides of a split, so patient-level accuracy may be lower. Next step: a parallel analysis on the de-duplicated Version~7 of the dataset~\cite{bdneuro2025v7} and on a collection with patient identifiers.
+\item \textit{Limited ablation and no retrained baselines:} Only the image-only variant was trained under the same folds; one fold of the full model takes about 6.8\,h on a Tesla T4. Graph-only, concatenation, fixed-gate, transformer-free and single-operator variants, and standard CNN and transformer baselines, remain to be compared on identical folds by McNemar's test.
 \item \textit{Single dataset, no external test:} All images come from one compiled collection, part of which overlaps by naming with other public sets. An independent test set must first be checked for overlap with the training data.
-\item \textit{Provenance and label quality:} The origin of the images was inferred from file names and not verified by image matching. One source shows a raised error rate consistent with label noise, and the collection mixes MR contrasts and contains at least one apparent CT image. Expert re-reading of the 103 misclassified images would separate label noise from model error.
-\item \textit{Single seed and stochastic selection:} Each fold was trained once (seed 42), and checkpoints were selected on a stochastic, saturated validation accuracy (Section~\ref{sec:calib}). Development was iterative: an earlier configuration was evaluated on fold~1 before the final design was fixed, so fold~1 was not strictly untouched during development.
+\item \textit{Label quality and provenance:} The dataset contains near-duplicate pairs with conflicting labels, mixes MR contrasts and includes at least one apparent CT image, and one source shows an error rate consistent with label noise. The origin of the images was inferred from file names. Expert re-reading of the misclassified images and of the conflicting pairs would separate label noise from model error.
+\item \textit{Single seed and an imperfect leakage comparison:} Each fold was trained once (seed 42). The image-level and grouped runs also differ in checkpoint criterion and in two augmentation details (Section~\ref{sec:leak}).
 \item \textit{Two-dimensional slices:} The model sees single 2D slices and ignores volumetric context and other MRI sequences.
-\item \textit{Inference cost:} GPU latency was not measured. Graph construction on the CPU dominates inference time when repeated for ten TTA views.
+\item \textit{Inference cost:} With ten TTA views, inference takes about 2.6\,s per image, dominated by CPU graph construction.
 \item \textit{Not a clinical device:} The model has not been evaluated prospectively or against radiologists, and its outputs are not diagnoses.
 \end{enumerate}
 
 % =====================================================================
 \section{Conclusion}
-A dual-stream EfficientNet-B3 and multi-scale graph model with uncertainty-gated fusion classified four-class brain tumour MRI with $99.15 \pm 0.39\%$ accuracy and $99.15 \pm 0.40\%$ macro-F1 under image-level stratified five-fold cross-validation (RQ1). Sensitivity was at least 98.5\% and specificity at least 99.7\% for every class, and only 0.20\% of tumour images were called tumour-free. The probability estimates were slightly conservative, with an ECE of 0.021 that stems mainly from label smoothing, and confidence below 0.9 flagged 58\% of all errors in 2.2\% of images (RQ2). More than a third of the dataset consists of augmented copies of 620 slices whose siblings sat in training, yet their accuracy did not differ from that of the remaining images (RQ3).
+Under duplicate-aware five-fold cross-validation, in which no group of augmented copies or near-duplicate slices was shared between training and test data, the dual-stream EfficientNet-B3 and graph model classified four-class brain tumour MRI with $96.54 \pm 1.71\%$ accuracy and $96.36 \pm 1.81\%$ macro-F1 (pooled 96.49\%, 95\% CI 95.50--97.37\%; RQ1). Its probabilities were well calibrated in the high-confidence range (pooled ECE 0.012), but almost half of the errors were made with high confidence, mostly on source slices whose copies were misclassified together (RQ2). An image-level split of the same data gave $99.15 \pm 0.39\%$: duplicate leakage inflated accuracy by 2.6 points and hid three quarters of the errors (RQ3). The audit also revealed near-duplicate images with conflicting labels.
 
-These results are image-level estimates on one compiled dataset. The near-uniform path weights and the parameter distribution show that the value of each architectural component remains to be demonstrated. Grouped, duplicate-aware validation, component ablations, retrained baselines and an independent external test are the necessary next steps before any claim of clinical generalisation.
+The uncertainty gate relied mainly on the image stream, and the graph operators kept equal weights. \todo{One sentence on the image-only ablation.} Patient-level validation, further ablations, retrained baselines and an independent external test are the necessary next steps before any claim of clinical generalisation.
 
 % =====================================================================
 \section*{Data and Code Availability}
-The dataset is publicly available on Mendeley Data, Version~1 (doi:10.17632/zwr4ntf94j.1), under a CC~BY~4.0 licence~\cite{hira2025mendeley}. The unmodified copy used for training is mirrored at \url{https://www.kaggle.com/datasets/arafatrahmann/my-data221}. The training script, the fold assignments, the per-image out-of-fold predictions and the audit scripts are available at \url{https://github.com/arafatrahmannoor/Paper-of-brain}.
+The dataset is publicly available on Mendeley Data, Version~1 (doi:10.17632/zwr4ntf94j.1), under a CC~BY~4.0 licence~\cite{hira2025mendeley}. The unmodified copy used for training is mirrored at \url{https://www.kaggle.com/datasets/arafatrahmann/my-data221}. The training scripts, the duplicate groups and fold assignments, the per-image out-of-fold predictions of both splits and the audit scripts are available at \url{https://github.com/arafatrahmannoor/Paper-of-brain}.
 
 \section*{Ethics Statement}
 This study used only a public, de-identified dataset. No new data were collected and no ethics approval was required.
