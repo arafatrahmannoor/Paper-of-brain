@@ -24,6 +24,7 @@
 #       FOLD_TO_RUN = 1   # Fold 2
 #       ...
 #       FOLD_TO_RUN = 4   # Fold 5
+#   FOLD_TO_RUN = [1, 2, 3, 4] runs several folds in one session (fast ablations).
 #   Set FOLD_TO_RUN = None only if you intentionally want all 5 folds in one run.
 # ============================================================================
 
@@ -135,7 +136,7 @@ MC_PASSES = 20
 MC_DROPOUT = 0.20
 AUX_LOSS_WEIGHT = 0.15
 
-# 0..4 = one fold. None = all folds.
+# 0..4 = one fold, a list such as [1, 2, 3, 4] = those folds in one session, None = all folds.
 FOLD_TO_RUN = 0
 
 CV_MODE = "grouped"          # "grouped" (duplicate-aware, recommended) or "image" (v1 behaviour)
@@ -1380,7 +1381,8 @@ def main():
     fold_results = []
 
     for fold, (train_val_idx, test_idx) in enumerate(splits):
-        if FOLD_TO_RUN is not None and fold != FOLD_TO_RUN:
+        wanted = FOLD_TO_RUN if isinstance(FOLD_TO_RUN, (list, tuple)) else [FOLD_TO_RUN]
+        if FOLD_TO_RUN is not None and fold not in wanted:
             continue
 
         print("\n" + "=" * 80)
