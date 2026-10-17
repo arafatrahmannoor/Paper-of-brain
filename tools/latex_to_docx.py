@@ -189,7 +189,7 @@ def widen_tables(docx_path, text_width=9026):  # A4 with 1-inch margins
             if len(cells) != ncol:
                 return row
             for k, c in enumerate(cells):
-                c2 = re.sub(r"<w:tcW [^>]*/>", "", c)
+                c2 = re.sub(r"<w:tcW [^>]*/>", "", c).replace("<w:tcPr />", "")  # pandoc writes an empty tcPr
                 c2 = c2.replace("<w:tcPr>", f'<w:tcPr><w:tcW w:w="{widths[k]}" w:type="dxa" />', 1) if "<w:tcPr>" in c2 \
                     else c2.replace("<w:tc>", f'<w:tc><w:tcPr><w:tcW w:w="{widths[k]}" w:type="dxa" /></w:tcPr>', 1)
                 row = row.replace(c, c2, 1)
