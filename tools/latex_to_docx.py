@@ -209,6 +209,10 @@ def widen_tables(docx_path, text_width=9026):  # A4 with 1-inch margins
                           'w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" '
                           'w:gutter="0" /></w:sectPr></w:body>')
     files["word/document.xml"] = xml.encode("utf8")
+    ct = files["[Content_Types].xml"].decode("utf8")
+    if 'Extension="png"' not in ct:  # images are declared per file; add the default some validators expect
+        ct = ct.replace('<Default Extension="xml"', '<Default Extension="png" ContentType="image/png" /><Default Extension="xml"', 1)
+        files["[Content_Types].xml"] = ct.encode("utf8")
     with zipfile.ZipFile(docx_path, "w", zipfile.ZIP_DEFLATED) as z:
         for n, d in files.items():
             z.writestr(n, d)
