@@ -1,0 +1,120 @@
+{
+  "fold": 2,
+  "accuracy": 0.9714285714285714,
+  "macro_precision": 0.9721216320955511,
+  "macro_recall": 0.9695322857190055,
+  "macro_f1": 0.9707641070793944,
+  "ece": 0.014718053054499936,
+  "brier": 0.04734758469983272,
+  "num_test_samples": 2310,
+  "classes": [
+    "glioma",
+    "meningioma",
+    "notumor",
+    "pituitary"
+  ],
+  "mc_passes": 20,
+  "mc_dropout": 0.2,
+  "tta_augments": 10,
+  "seed": 42,
+  "cv_mode": "grouped",
+  "ablation": "image_only",
+  "select_on": "val_loss",
+  "best_epoch": 5,
+  "best_val_acc": 0.9611650485436893,
+  "epochs_run": 10,
+  "n_train": 8724,
+  "n_val": 1030,
+  "history": [
+    {
+      "epoch": 1,
+      "train_acc": 0.5075653370013755,
+      "train_loss": 1.1423830119418967,
+      "val_acc": 0.8048543689320389,
+      "val_loss": 0.5598424932331715,
+      "minutes": 1.0936765789985656
+    },
+    {
+      "epoch": 2,
+      "train_acc": 0.9039431453461715,
+      "train_loss": 0.39209226284181237,
+      "val_acc": 0.8990291262135922,
+      "val_loss": 0.2887324694290902,
+      "minutes": 0.8051229635874431
+    },
+    {
+      "epoch": 3,
+      "train_acc": 0.9562127464465842,
+      "train_loss": 0.2611899722311159,
+      "val_acc": 0.9281553398058252,
+      "val_loss": 0.24548472449617478,
+      "minutes": 0.8064784049987793
+    },
+    {
+      "epoch": 4,
+      "train_acc": 0.9708849151765245,
+      "train_loss": 0.2151093675640951,
+      "val_acc": 0.9368932038834952,
+      "val_loss": 0.20315288438380344,
+      "minutes": 0.8137303034464518
+    },
+    {
+      "epoch": 5,
+      "train_acc": 0.9810866574965612,
+      "train_loss": 0.19158102778981773,
+      "val_acc": 0.9611650485436893,
+      "val_loss": 0.1432160626916052,
+      "minutes": 0.8152368783950805
+    },
+    {
+      "epoch": 6,
+      "train_acc": 0.9870472260430995,
+      "train_loss": 0.17197443643249213,
+      "val_acc": 0.9563106796116505,
+      "val_loss": 0.1672069585439071,
+      "minutes": 0.8144309639930725
+    },
+    {
+      "epoch": 7,
+      "train_acc": 0.9923200366804218,
+      "train_loss": 0.16200646221063816,
+      "val_acc": 0.9533980582524272,
+      "val_loss": 0.16878471941623874,
+      "minutes": 0.8127005259195964
+    },
+    {
+      "epoch": 8,
+      "train_acc": 0.9933516735442458,
+      "train_loss": 0.15625305402065734,
+      "val_acc": 0.962135922330097,
+      "val_loss": 0.1625677111658078,
+      "minutes": 0.8132452885309855
+    },
+    {
+      "epoch": 9,
+      "train_acc": 0.9941540577716643,
+      "train_loss": 0.15619344539950605,
+      "val_acc": 0.9601941747572815,
+      "val_loss": 0.17146585629981698,
+      "minutes": 0.8135448892911276
+    },
+    {
+      "epoch": 10,
+      "train_acc": 0.9963319578175149,
+      "train_loss": 0.14747913739294263,
+      "val_acc": 0.9466019417475728,
+      "val_loss": 0.2014827950486859,
+      "minutes": 0.8153903285662333
+    }
+  ],
+  "complexity": {
+    "params": 12505260,
+    "gflops_single_pass": 1.925951008,
+    "ms_single_forward": 16.766325366673602,
+    "ms_graph_construction_cpu": 290.77756590001326,
+    "ms_full_pipeline": 3125.6260483991355,
+    "tta_views": 10,
+    "mc_passes": 20,
+    "device": "Tesla T4"
+  }
+}
