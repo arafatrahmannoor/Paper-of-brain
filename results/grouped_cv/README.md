@@ -102,3 +102,16 @@ The same fold under the v1 image-level split scored 99.30% (17 errors), so near-
   - Mean `w_image` is 0.86 on misclassified images and 0.82 on correctly classified ones.
   - Learned τ = 0.764.
   - The GNN path weights stay at about 1/3 each: α = [0.329, 0.330, 0.341] and β = [0.333, 0.336, 0.330]. They do not specialise.
+
+## Four-model ablation (same grouped folds, all 5 folds each)
+Regenerate the figures and tests with `python tools/make_ablation_figures.py`; run `python tools/aggregate_grouped_cv.py <ablation>` for the per-fold checks.
+
+| Model | Accuracy mean ± SD | Pooled | Macro-F1 | ECE | Full − variant (group-bootstrap 95% CI) | McNemar p |
+|---|---|---|---|---|---|---|
+| image_only | 96.58 ± 1.44 | 96.55 | 96.45 ± 1.51 | 0.015 | −0.06 pp [−0.61, +0.46] | 0.72 |
+| graph_only | 87.48 ± 1.73 | 87.43 | 87.13 ± 1.79 | 0.030 | +9.06 pp [+7.76, +10.48] | <1e-200 |
+| concat | 96.25 ± 1.74 | 96.21 | 96.14 ± 1.85 | 0.019 | +0.28 pp [−0.16, +0.72] | 0.049 |
+| full | 96.54 ± 1.71 | 96.49 | 96.36 ± 1.81 | 0.018 | — | — |
+
+- EfficientNet-B3 alone matches the full model, so the graph stream and the fusion modules add no measurable accuracy on this dataset.
+- A repeated training of the full model on fold 1 gave 94.62% instead of 97.06%, so single-run differences of a point or two are within run-to-run noise.
