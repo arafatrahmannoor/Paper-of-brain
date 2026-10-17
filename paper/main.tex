@@ -252,7 +252,7 @@ All views use the same resizing as training and validation.
 % =====================================================================
 \section{Experimental Setup and Evaluation Protocol}
 \subsection{Implementation}
-The model was implemented in PyTorch~\cite{paszke2019pytorch} with PyTorch Geometric~\cite{fey2019pyg} and the torchvision EfficientNet-B3. It was trained on single-GPU Kaggle notebook sessions with an NVIDIA Tesla T4 (PyTorch \todo{version}, PyTorch Geometric \todo{version}) and automatic mixed precision. Each fold ran as a separate session, with only the fold index changed; one fold took about 17\,min per epoch and 6.8\,h in total.
+The model was implemented in PyTorch~\cite{paszke2019pytorch} with PyTorch Geometric~\cite{fey2019pyg} and the torchvision EfficientNet-B3. It was trained on single-GPU Kaggle notebook sessions with an NVIDIA Tesla T4 (PyTorch 2.11.0 with CUDA 12.8, PyTorch Geometric 2.8.1) and automatic mixed precision. Each fold ran as a separate session, with only the fold index changed; one fold took about 17\,min per epoch and 6.8\,h in total.
 
 \subsection{Cross-Validation and Test Isolation}\label{sec:cv}
 \textit{Duplicate-aware groups:} Before splitting, related images were merged into groups by union--find. First, all files sharing a source-slice stem and class (\fname{G\_710.jpg}, \fname{G\_710\_RO\_.jpg}, \dots) were joined. Second, a 64-bit perceptual hash (pHash) was computed for every image, and any two images whose hashes differed in at most 5 bits were joined, regardless of file name or class. This reduced the 12,064 images to 3,873 groups: 1,871 single images and 2,002 groups of two or more (largest 93 images).
